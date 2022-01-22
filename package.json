@@ -1,0 +1,23 @@
+{
+  "name": "blu-hawaii",
+  "type": "module",
+  "exports": "./dist/index.js",
+  "version": "1.0.0",
+  "description": "Scrobble music played on BluOS players to Last.fm",
+  "scripts": {
+    "format": "prettier src --write",
+    "build": "npm run format && npx tsc"
+  },
+  "author": "Janne Liuhtonen",
+  "license": "MIT",
+  "devDependencies": {
+    "prettier": "^2.5.1",
+    "typescript": "^4.5.5"
+  },
+  "dependencies": {
+    "got": "^12.0.1",
+    "rxjs": "^7.5.2",
+    "xml-js": "^1.6.11",
+    "zod": "^3.11.6"
+  }
+}
