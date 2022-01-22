@@ -1,3 +1,4 @@
+import "dotenv/config"
 import { got } from "../node_modules/got/dist/source/index.js"
 import {
   distinctUntilChanged,
