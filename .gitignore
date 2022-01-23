@@ -4,3 +4,4 @@ node_modules/
 *.swp
 *.tsbuildinfo
 .env
+.blu-hawaii-session

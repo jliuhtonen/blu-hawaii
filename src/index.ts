@@ -10,28 +10,23 @@ import {
   timer,
 } from "rxjs"
 import { isSameTrack, parsePlayingTrack } from "./bluOs.js"
-import * as lastFm from "./lastFm.js"
+import { obtainSessionToken } from "./session.js"
 
 const bluOsPollInterval = 5000
 const bluOsConfig = {
-  ip: process.env["BLUOS_IP"],
-  port: process.env["BLUOS_PORT"],
+  ip: process.env["BLUOS_IP"]!!,
+  port: process.env["BLUOS_PORT"]!!,
 }
 
 const lastFmConfig = {
-  apiKey: process.env["LAST_FM_API_KEY"],
-  secret: process.env["LAST_FM_API_SECRET"],
+  apiKey: process.env["LAST_FM_API_KEY"]!!,
+  apiSecret: process.env["LAST_FM_API_SECRET"]!!,
 }
 
 const statusUrl = `http://${bluOsConfig.ip}:${bluOsConfig.port}/Status`
-const authToken = await lastFm.getAuthToken(lastFmConfig.apiKey!!)
 
-console.log(
-  `Please approve the Last.fm API client at ${lastFm.createApproveApiClientUrl(
-    lastFmConfig.apiKey!!,
-    authToken,
-  )}`,
-)
+const sessionToken = await obtainSessionToken(lastFmConfig)
+console.log("session token! ", sessionToken)
 
 const bluOsStatus = timer(0, bluOsPollInterval).pipe(
   switchMap(() =>
