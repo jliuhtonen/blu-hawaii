@@ -3,7 +3,7 @@ import { URLSearchParams } from "url"
 import * as zod from "zod"
 import crypto from "node:crypto"
 
-const baseUrl = "http://ws.audioscrobbler.com/2.0"
+const baseUrl = "https://ws.audioscrobbler.com/2.0"
 
 export interface LastFmConfig {
   apiKey: string
@@ -49,7 +49,7 @@ export function createApproveApiClientUrl(
     token: authToken,
   })
 
-  return `http://www.last.fm/api/auth/?${searchParams.toString()}`
+  return `https://www.last.fm/api/auth/?${searchParams.toString()}`
 }
 
 function createApiSignature(
