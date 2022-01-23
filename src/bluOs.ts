@@ -1,6 +1,11 @@
 import { xml2js } from "xml-js"
 import * as zod from "zod"
 
+export interface StatusQueryResponse {
+  etag: string
+  playingTrack?: PlayingTrack
+}
+
 export interface PlayingTrack {
   artist: string
   album: string
@@ -21,20 +26,32 @@ export function isSameTrack(
   }
 }
 
-export function parsePlayingTrack(bluOsXml: string): PlayingTrack | undefined {
+export function parsePlayingTrack(bluOsXml: string): StatusQueryResponse {
   const parsedJs = xml2js(bluOsXml, { compact: true })
+
+  const etag = xmlJsEtag.parse(parsedJs)
   const parsedData = xmlJsStatus.safeParse(parsedJs)
 
   if (parsedData.success) {
-    return parsedData.data
+    return { etag, playingTrack: parsedData.data }
   } else {
-    return undefined
+    return { etag }
   }
 }
 
 const xmlTextField = zod.object({
   _text: zod.string(),
 })
+
+const xmlJsEtag = zod
+  .object({
+    status: zod.object({
+      _attributes: zod.object({
+        etag: zod.string(),
+      }),
+    }),
+  })
+  .transform((s) => s.status._attributes.etag)
 
 const xmlJsStatus = zod
   .object({
