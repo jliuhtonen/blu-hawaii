@@ -1,14 +1,6 @@
 import "dotenv/config"
 import { got } from "../node_modules/got/dist/source/index.js"
-import {
-  distinctUntilChanged,
-  filter,
-  from,
-  NEVER,
-  of,
-  switchMap,
-  timer,
-} from "rxjs"
+import { distinctUntilChanged, filter, from, map, switchMap, timer } from "rxjs"
 import { isSameTrack, parsePlayingTrack } from "./bluOs.js"
 import { obtainSessionToken } from "./session.js"
 
@@ -36,17 +28,18 @@ const bluOsStatus = timer(0, bluOsPollInterval).pipe(
 
 const playingTrack = bluOsStatus.pipe(
   filter((r) => r.statusCode === 200),
-  switchMap((r) => {
-    const track = parsePlayingTrack(r.body)
-    return track ? of(track) : NEVER
-  }),
+  map((r) => parsePlayingTrack(r.body)),
   distinctUntilChanged(isSameTrack),
 )
 
 const errorResponse = bluOsStatus.pipe(filter((r) => r.statusCode !== 200))
 
 const subscriptions = playingTrack.subscribe((v) => {
-  console.log("Playing track changed: ", JSON.stringify(v, null, 2))
+  if (v === undefined) {
+    console.log("Nothing playing")
+  } else {
+    console.log("Playing track: ", JSON.stringify(v, null, 2))
+  }
 })
 
 subscriptions.add(

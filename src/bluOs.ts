@@ -8,8 +8,17 @@ export interface PlayingTrack {
   secs: string
 }
 
-export function isSameTrack(a: PlayingTrack, b: PlayingTrack): boolean {
-  return a.title === b.title && a.album === b.album && a.title === b.title
+export function isSameTrack(
+  a: PlayingTrack | undefined,
+  b: PlayingTrack | undefined,
+): boolean {
+  if (a === undefined && b === undefined) {
+    return true
+  } else if (a === undefined || b === undefined) {
+    return false
+  } else {
+    return a.title === b.title && a.album === b.album && a.title === b.title
+  }
 }
 
 export function parsePlayingTrack(bluOsXml: string): PlayingTrack | undefined {
