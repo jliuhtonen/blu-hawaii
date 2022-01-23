@@ -20,11 +20,10 @@ const bluOsConfig = {
 
 const lastFmConfig = {
   apiKey: process.env["LAST_FM_API_KEY"],
-  LAST_FM_API_SECRET: process.env["LAST_FM_API_SECRET"],
+  secret: process.env["LAST_FM_API_SECRET"],
 }
 
 const statusUrl = `http://${bluOsConfig.ip}:${bluOsConfig.port}/Status`
-
 const authToken = await lastFm.getAuthToken(lastFmConfig.apiKey!!)
 
 console.log(
