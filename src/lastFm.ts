@@ -10,6 +10,14 @@ export interface LastFmConfig {
   apiSecret: string
 }
 
+export interface LastFmTrack {
+  artist: string
+  track: string
+  timestamp: number
+  album?: string
+  duration?: number
+}
+
 export async function getAuthToken(apiKey: string): Promise<string> {
   const searchParams = {
     method: "auth.gettoken",
@@ -50,6 +58,28 @@ export function createApproveApiClientUrl(
   })
 
   return `https://www.last.fm/api/auth/?${searchParams.toString()}`
+}
+
+export async function scrobbleTrack(
+  config: LastFmConfig,
+  sessionKey: string,
+  track: LastFmTrack,
+): Promise<unknown> {
+  const callParams = {
+    ...track,
+    method: "track.scrobble",
+    api_key: config.apiKey,
+    sk: sessionKey,
+  }
+
+  const body = {
+    ...callParams,
+    api_sig: createApiSignature(callParams, config.apiSecret),
+    format: "json",
+  }
+
+  const response = await got.post(baseUrl, { form: body }).json()
+  return response
 }
 
 function createApiSignature(
