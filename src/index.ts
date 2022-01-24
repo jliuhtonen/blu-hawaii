@@ -10,7 +10,12 @@ import {
   switchMap,
   tap,
 } from "rxjs"
-import { isSameTrack, parsePlayingTrack, StatusQueryResponse } from "./bluOs.js"
+import {
+  isSameTrack,
+  parsePlayingTrack,
+  PlayingTrack,
+  StatusQueryResponse,
+} from "./bluOs.js"
 import { obtainSessionToken } from "./session.js"
 
 const bluOsConfig = {
@@ -26,7 +31,10 @@ const lastFmConfig = {
 const statusUrl = `http://${bluOsConfig.ip}:${bluOsConfig.port}/Status`
 
 const sessionToken = await obtainSessionToken(lastFmConfig)
+
 console.log("session token! ", sessionToken)
+
+const trackPlayingStates = ["play", "stream"]
 
 const previousResponseEtag = new BehaviorSubject<string | undefined>(undefined)
 
@@ -52,6 +60,7 @@ const playingTrack = bluOsStatus.pipe(
     }
   }),
   map((s) => s.playingTrack),
+  filter(shouldScrobble),
   distinctUntilChanged(isSameTrack),
 )
 
@@ -74,3 +83,14 @@ subscriptions.add(
 process.on("exit", () => {
   subscriptions.unsubscribe()
 })
+
+function shouldScrobble(t: PlayingTrack | undefined) {
+  if (t === undefined) {
+    return true
+  }
+  return trackPlayingStates.includes(t.state) && hasPlayedLongEnough(t)
+}
+
+function hasPlayedLongEnough(t: PlayingTrack) {
+  return t.secs >= 99 || t.totalLength < 99
+}

@@ -6,12 +6,7 @@ export interface StatusQueryResponse {
   playingTrack?: PlayingTrack
 }
 
-export interface PlayingTrack {
-  artist: string
-  album: string
-  title: string
-  secs: string
-}
+export type PlayingTrack = zod.infer<typeof xmlJsStatus>
 
 export function isSameTrack(
   a: PlayingTrack | undefined,
@@ -60,11 +55,15 @@ const xmlJsStatus = zod
       album: xmlTextField,
       title1: xmlTextField,
       secs: xmlTextField,
+      totlen: xmlTextField,
+      state: xmlTextField,
     }),
   })
   .transform((value) => ({
     artist: value.status.artist._text,
     album: value.status.album._text,
     title: value.status.title1._text,
-    secs: value.status.secs._text,
+    secs: Number(value.status.secs._text),
+    totalLength: Number(value.status.totlen._text),
+    state: value.status.state._text,
   }))
