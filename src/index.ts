@@ -100,7 +100,7 @@ const scrobbledTrack = playingTrack.pipe(
 )
 
 const subscriptions = updatedNowPlayingTrack.subscribe((response) => {
-  console.log("UpdatedNowPlaying:", response)
+  console.log("UpdatedNowPlaying:", JSON.stringify(response, null, 2))
 })
 
 subscriptions.add(
