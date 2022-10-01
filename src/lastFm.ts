@@ -65,6 +65,7 @@ export async function scrobbleTrack(
   sessionKey: string,
   track: LastFmTrack,
 ): Promise<unknown> {
+  console.log("scrobble")
   const callParams = {
     ...track,
     method: "track.scrobble",
@@ -79,6 +80,35 @@ export async function scrobbleTrack(
   }
 
   const response = await got.post(baseUrl, { form: body }).json()
+  return response
+}
+
+export interface NowPlayingTrack {
+  artist: string
+  track: string
+  album?: string
+}
+
+export async function nowPlaying(
+  config: LastFmConfig,
+  sessionKey: string,
+  track: NowPlayingTrack,
+): Promise<unknown> {
+  console.log("nowplaying")
+  const callParams = {
+    ...track,
+    method: "track.updateNowPlaying",
+    api_key: config.apiKey,
+    sk: sessionKey,
+  }
+
+  const body = {
+    ...callParams,
+    api_sig: createApiSignature(callParams, config.apiSecret),
+    format: "json",
+  }
+
+  const response = got.post(baseUrl, { form: body }).json()
   return response
 }
 

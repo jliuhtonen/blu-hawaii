@@ -66,29 +66,48 @@ const playingTrack = bluOsStatus.pipe(
   }),
   map((s) => s.playingTrack),
   filter((t): t is PlayingTrack => t !== undefined),
-  filter(shouldScrobble),
-  distinctUntilChanged(isSameTrack),
 )
 
 const errorResponse = bluOsStatus.pipe(filter((r) => r.statusCode !== 200))
 
-const subscriptions = playingTrack
-  .pipe(
-    mergeMap((t) =>
-      from(
-        lastFm.scrobbleTrack(lastFmConfig, sessionToken, {
-          artist: t.artist,
-          album: t.album,
-          track: t.title,
-          duration: t.totalLength,
-          timestamp: Math.floor(Date.now() / 1000),
-        }),
-      ),
+const updatedNowPlayingTrack = playingTrack.pipe(
+  distinctUntilChanged(isSameTrack),
+  mergeMap((t) =>
+    from(
+      lastFm.nowPlaying(lastFmConfig, sessionToken, {
+        artist: t.artist,
+        album: t.album,
+        track: t.title,
+      }),
     ),
-  )
-  .subscribe((scrobbleResponse) => {
+  ),
+)
+
+const scrobbledTrack = playingTrack.pipe(
+  filter(shouldScrobble),
+  distinctUntilChanged(isSameTrack),
+  mergeMap((t) =>
+    from(
+      lastFm.scrobbleTrack(lastFmConfig, sessionToken, {
+        artist: t.artist,
+        album: t.album,
+        track: t.title,
+        duration: t.totalLength,
+        timestamp: Math.floor(Date.now() / 1000),
+      }),
+    ),
+  ),
+)
+
+const subscriptions = updatedNowPlayingTrack.subscribe((response) => {
+  console.log("UpdatedNowPlaying:", response)
+})
+
+subscriptions.add(
+  scrobbledTrack.subscribe((scrobbleResponse) => {
     console.log(`Scrobble:`, JSON.stringify(scrobbleResponse, null, 2))
-  })
+  }),
+)
 
 subscriptions.add(
   errorResponse.subscribe((r) => {
@@ -100,8 +119,12 @@ process.on("exit", () => {
   subscriptions.unsubscribe()
 })
 
+function isTrackPlaying(t: PlayingTrack) {
+  return trackPlayingStates.includes(t.state)
+}
+
 function shouldScrobble(t: PlayingTrack) {
-  return trackPlayingStates.includes(t.state) && hasPlayedLongEnough(t)
+  return isTrackPlaying(t) && hasPlayedLongEnough(t)
 }
 
 function hasPlayedLongEnough(t: PlayingTrack) {
