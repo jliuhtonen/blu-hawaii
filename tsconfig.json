@@ -5,7 +5,7 @@
     "lib": ["esnext"],
     "module": "esnext",
     "rootDir": "./src",
-    "moduleResolution": "node",
+    "moduleResolution": "nodenext",
     "outDir": "./dist",
     "forceConsistentCasingInFileNames": true,
     "strict": true,
