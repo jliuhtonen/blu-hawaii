@@ -16,7 +16,7 @@ import {
   parsePlayingTrack,
   PlayingTrack,
   StatusQueryResponse,
-} from "./bluOs.js"
+} from "./bluOs/model.js"
 import { obtainSessionToken } from "./session.js"
 import * as lastFm from "./lastFm.js"
 
