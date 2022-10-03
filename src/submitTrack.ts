@@ -1,6 +1,13 @@
 import { Observable, distinctUntilChanged, mergeMap, from, filter } from "rxjs"
-import { isSameTrack, isTrackPlaying, PlayingTrack } from "./bluOs.js"
+import {
+  hasPlayedOverThreshold,
+  isSameTrack,
+  isTrackPlaying,
+  PlayingTrack,
+} from "./bluOs.js"
 import * as lastFm from "./lastFm.js"
+
+const scrobbleThreshold = 0.5
 
 export function updateNowPlaying(
   lastFmConfig: lastFm.LastFmConfig,
@@ -44,9 +51,5 @@ export function scrobbleTrack(
 }
 
 function shouldScrobble(t: PlayingTrack) {
-  return isTrackPlaying(t) && hasPlayedLongEnough(t)
-}
-
-function hasPlayedLongEnough(t: PlayingTrack) {
-  return t.secs >= 99 || t.totalLength < 99
+  return isTrackPlaying(t) && hasPlayedOverThreshold(t, scrobbleThreshold)
 }

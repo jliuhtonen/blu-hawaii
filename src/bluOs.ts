@@ -24,6 +24,7 @@ export interface StatusQueryResponse {
 
 export type PlayingTrack = zod.infer<typeof xmlJsStatus>
 
+const longPollTimeoutSecs = 100
 const trackPlayingStates = ["play", "stream"]
 
 export function createBluOsStatusObservable(
@@ -40,7 +41,7 @@ export function createBluOsStatusObservable(
       return from(
         Promise.resolve(
           got.get(statusUrl, {
-            searchParams: { etag, timeout: 100 },
+            searchParams: { etag, timeout: longPollTimeoutSecs },
           }),
         ),
       )
@@ -64,6 +65,13 @@ export function isTrackPlaying(t: PlayingTrack) {
 
 export function isSameTrack(a: PlayingTrack, b: PlayingTrack): boolean {
   return a.title === b.title && a.album === b.album && a.title === b.title
+}
+
+export function hasPlayedOverThreshold(t: PlayingTrack, threshold: number) {
+  return (
+    t.secs / longPollTimeoutSecs >=
+    (t.totalLength / longPollTimeoutSecs) * threshold
+  )
 }
 
 function parseBluOsStatus(bluOsXml: string): StatusQueryResponse {
