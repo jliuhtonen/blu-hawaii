@@ -66,7 +66,7 @@ export function isSameTrack(a: PlayingTrack, b: PlayingTrack): boolean {
   return a.title === b.title && a.album === b.album && a.title === b.title
 }
 
-export function parseBluOsStatus(bluOsXml: string): StatusQueryResponse {
+function parseBluOsStatus(bluOsXml: string): StatusQueryResponse {
   const parsedJs = xml2js(bluOsXml, { compact: true })
 
   const etag = xmlJsEtag.parse(parsedJs)
