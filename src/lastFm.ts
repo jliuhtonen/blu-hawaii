@@ -2,12 +2,14 @@ import got from "../node_modules/got/dist/source/index.js"
 import { URLSearchParams } from "url"
 import * as zod from "zod"
 import crypto from "node:crypto"
+import { Logger } from "pino"
 
 const baseUrl = "https://ws.audioscrobbler.com/2.0"
 
 export interface LastFmConfig {
   apiKey: string
   apiSecret: string
+  logger: Logger
 }
 
 export interface LastFmTrack {
@@ -45,6 +47,7 @@ export async function getSession(
   }
   const response = await got(baseUrl, { searchParams }).json()
   const parsedSession = sessionResponse.parse(response)
+  config.logger.info({ msg: "Fetched Last.Fm session" })
   return parsedSession.session.key
 }
 
@@ -65,7 +68,7 @@ export async function scrobbleTrack(
   sessionKey: string,
   track: LastFmTrack,
 ): Promise<unknown> {
-  console.log("scrobble")
+  config.logger.debug({ msg: "Scrobbling track", track })
   const callParams = {
     ...track,
     method: "track.scrobble",
@@ -94,7 +97,7 @@ export async function nowPlaying(
   sessionKey: string,
   track: NowPlayingTrack,
 ): Promise<unknown> {
-  console.log("nowplaying")
+  config.logger.debug({ msg: "Updating now playing", track })
   const callParams = {
     ...track,
     method: "track.updateNowPlaying",

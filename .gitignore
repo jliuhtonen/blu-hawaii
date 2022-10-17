@@ -1,4 +1,5 @@
 .vscode/
+logs/
 dist/
 node_modules/
 *.swp

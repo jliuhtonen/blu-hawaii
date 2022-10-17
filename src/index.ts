@@ -3,25 +3,36 @@ import { filter, map, Subscription } from "rxjs"
 import { createBluOsStatusObservable, PlayingTrack } from "./bluOs.js"
 import { obtainSessionToken } from "./session.js"
 import { scrobbleTrack, updateNowPlaying } from "./submitTrack.js"
+import { pino } from "pino"
 
-const bluOsConfig = {
-  ip: process.env["BLUOS_IP"]!!,
-  port: process.env["BLUOS_PORT"]!!,
-}
+async function createScrobbler(): Promise<Subscription> {
+  const logger = pino(
+    {
+      level: process.env["LOG_LEVEL"] ?? "info",
+      name: "blu-hawaii",
+    },
+    pino.destination("./logs/blu-hawaii.log"),
+  )
 
-const lastFmConfig = {
-  apiKey: process.env["LAST_FM_API_KEY"]!!,
-  apiSecret: process.env["LAST_FM_API_SECRET"]!!,
-}
+  const bluOsConfig = {
+    ip: process.env["BLUOS_IP"]!!,
+    port: process.env["BLUOS_PORT"]!!,
+    logger: logger.child({ component: "bluOS" }),
+  }
 
-const sessionToken = await obtainSessionToken(lastFmConfig)
+  const lastFmConfig = {
+    apiKey: process.env["LAST_FM_API_KEY"]!!,
+    apiSecret: process.env["LAST_FM_API_SECRET"]!!,
+    logger: logger.child({ component: "lastFm" }),
+  }
 
-if (!sessionToken) {
-  console.error("Unable to obtain session!")
-  process.exit(1)
-}
+  const sessionToken = await obtainSessionToken(lastFmConfig)
 
-function createScrobbler(sessionToken: string): Subscription {
+  if (!sessionToken) {
+    logger.error({ error: "Unable to obtain session!" })
+    process.exit(1)
+  }
+
   const bluOsStatus = createBluOsStatusObservable(bluOsConfig)
 
   const playingTrack = bluOsStatus.pipe(
@@ -38,19 +49,19 @@ function createScrobbler(sessionToken: string): Subscription {
   const scrobbledTrack = scrobbleTrack(lastFmConfig, sessionToken, playingTrack)
 
   const subscriptions = updatedNowPlayingTrack.subscribe((response) => {
-    console.log("UpdatedNowPlaying:", JSON.stringify(response, null, 2))
+    logger.info({ updatedNowPlaying: response })
   })
 
   subscriptions.add(
     scrobbledTrack.subscribe((scrobbleResponse) => {
-      console.log(`Scrobble:`, JSON.stringify(scrobbleResponse, null, 2))
+      logger.info({ scrobble: scrobbleResponse })
     }),
   )
 
   return subscriptions
 }
 
-const subscriptions = createScrobbler(sessionToken)
+const subscriptions = await createScrobbler()
 
 process.on("exit", () => {
   subscriptions.unsubscribe()

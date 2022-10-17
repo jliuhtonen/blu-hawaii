@@ -11,10 +11,12 @@ import {
 } from "rxjs"
 import { xml2js } from "xml-js"
 import * as zod from "zod"
+import { Logger } from "pino"
 
 export interface BluOsConfig {
   ip: string
   port: string
+  logger: Logger
 }
 
 export interface StatusQueryResponse {
@@ -27,10 +29,12 @@ export type PlayingTrack = zod.infer<typeof xmlJsStatus>
 const longPollTimeoutSecs = 100
 const trackPlayingStates = ["play", "stream"]
 
-export function createBluOsStatusObservable(
-  bluOsConfig: BluOsConfig,
-): Observable<StatusQueryResponse> {
-  const statusUrl = `http://${bluOsConfig.ip}:${bluOsConfig.port}/Status`
+export function createBluOsStatusObservable({
+  ip,
+  port,
+  logger,
+}: BluOsConfig): Observable<StatusQueryResponse> {
+  const statusUrl = `http://${ip}:${port}/Status`
 
   const previousResponseEtag = new BehaviorSubject<string | undefined>(
     undefined,
@@ -49,6 +53,7 @@ export function createBluOsStatusObservable(
     filter((r) => r.statusCode === 200),
     map((r) => parseBluOsStatus(r.body)),
     tap((status: StatusQueryResponse) => {
+      logger.debug({ bluOsStatus: status })
       if (status !== undefined) {
         previousResponseEtag.next(status.etag)
       }
