@@ -4,32 +4,32 @@ import { createBluOsStatusObservable, PlayingTrack } from "./bluOs.js"
 import { obtainSessionToken } from "./session.js"
 import { scrobbleTrack, updateNowPlaying } from "./submitTrack.js"
 import { pino } from "pino"
+import { Configuration, parseConfiguration } from "./configuration.js"
 
-const subscriptions = await createScrobbler()
+const config = parseConfiguration(process.env)
+const subscriptions = await createScrobbler(config)
 
 process
   .once("SIGINT", shutdown)
   .once("SIGTERM", shutdown)
   .once("uncaughtException", handleUncaughtError)
 
-async function createScrobbler(): Promise<Subscription> {
+async function createScrobbler(config: Configuration): Promise<Subscription> {
   const logger = pino(
     {
-      level: process.env["LOG_LEVEL"] ?? "info",
+      level: config.logLevel,
       name: "blu-hawaii",
     },
     pino.destination("./logs/blu-hawaii.log"),
   )
 
   const bluOsConfig = {
-    ip: process.env["BLUOS_IP"]!!,
-    port: process.env["BLUOS_PORT"]!!,
+    ...config.bluOs,
     logger: logger.child({ component: "bluOS" }),
   }
 
   const lastFmConfig = {
-    apiKey: process.env["LAST_FM_API_KEY"]!!,
-    apiSecret: process.env["LAST_FM_API_SECRET"]!!,
+    ...config.lastFm,
     logger: logger.child({ component: "lastFm" }),
   }
 

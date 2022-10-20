@@ -15,7 +15,7 @@ import { Logger } from "pino"
 
 export interface BluOsConfig {
   ip: string
-  port: string
+  port: number
   logger: Logger
 }
 
