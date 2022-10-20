@@ -26,7 +26,7 @@ async function createNewSession(
   const authToken = await lastFm.getAuthToken(lastFmConfig.apiKey)
   const answer = await question(
     `Please approve the Last.fm API client at ${lastFm.createApproveApiClientUrl(
-      lastFmConfig.apiKey!!,
+      lastFmConfig.apiKey,
       authToken,
     )}\n Then type 'yes' followed by return to continue: `,
   )
