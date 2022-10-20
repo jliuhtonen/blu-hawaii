@@ -13,6 +13,9 @@ const configuration = z.object({
     apiKey: z.string(),
     apiSecret: z.string(),
   }),
+  session: z.object({
+    filePath: z.string().default(".blu-hawaii-session"),
+  }),
 })
 
 export type Configuration = z.infer<typeof configuration>

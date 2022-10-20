@@ -2,20 +2,19 @@ import * as fs from "node:fs/promises"
 import * as lastFm from "./lastFm.js"
 import * as readline from "node:readline"
 
-const sessionFile = ".blu-hawaii-session"
-
 const rl = readline.createInterface(process.stdin, process.stdout)
 
 export async function obtainSessionToken(
+  sessionFilePath: string,
   lastFmConfig: lastFm.LastFmConfig,
 ): Promise<string | undefined> {
-  const persistedSession = await loadSessionToken()
+  const persistedSession = await loadSessionToken(sessionFilePath)
   if (persistedSession !== undefined) {
     return persistedSession
   } else {
     const sessionToken = await createNewSession(lastFmConfig)
     if (sessionToken !== undefined) {
-      await persistSessionToken(sessionToken)
+      await persistSessionToken(sessionFilePath, sessionToken)
     }
     return sessionToken
   }
@@ -24,7 +23,7 @@ export async function obtainSessionToken(
 async function createNewSession(
   lastFmConfig: lastFm.LastFmConfig,
 ): Promise<string | undefined> {
-  const authToken = await lastFm.getAuthToken(lastFmConfig.apiKey!!)
+  const authToken = await lastFm.getAuthToken(lastFmConfig.apiKey)
   const answer = await question(
     `Please approve the Last.fm API client at ${lastFm.createApproveApiClientUrl(
       lastFmConfig.apiKey!!,
@@ -38,16 +37,21 @@ async function createNewSession(
   }
 }
 
-async function loadSessionToken(): Promise<string | undefined> {
+async function loadSessionToken(
+  sessionFilePath: string,
+): Promise<string | undefined> {
   try {
-    return await fs.readFile(sessionFile, "utf8")
+    return await fs.readFile(sessionFilePath, "utf8")
   } catch (e) {
     return undefined
   }
 }
 
-async function persistSessionToken(token: string): Promise<void> {
-  await fs.writeFile(sessionFile, token, { encoding: "utf8", mode: 0o600 })
+async function persistSessionToken(
+  sessionFilePath: string,
+  token: string,
+): Promise<void> {
+  await fs.writeFile(sessionFilePath, token, { encoding: "utf8", mode: 0o600 })
 }
 
 function question(text: string): Promise<string> {

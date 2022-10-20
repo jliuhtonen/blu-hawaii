@@ -37,7 +37,10 @@ async function createScrobbler(config: Configuration): Promise<Subscription> {
     logger: logger.child({ component: "lastFm" }),
   }
 
-  const sessionToken = await obtainSessionToken(lastFmConfig)
+  const sessionToken = await obtainSessionToken(
+    config.session.filePath,
+    lastFmConfig,
+  )
 
   if (!sessionToken) {
     logger.error({ error: "Unable to obtain session!" })
