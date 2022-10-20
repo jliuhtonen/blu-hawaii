@@ -3,18 +3,7 @@ import { z } from "zod"
 const configuration = z.object({
   log: z.object({
     level: z.string().default("info"),
-    destination: z.string().transform((d) => {
-      if (d === "stdout") {
-        return {
-          type: "stdout",
-        }
-      } else {
-        return {
-          type: "file",
-          path: d,
-        }
-      }
-    }),
+    destination: z.string().transform(stringToLoggingDestination),
   }),
   bluOs: z.object({
     ip: z.string(),
@@ -45,5 +34,30 @@ export function parseConfiguration(
       apiKey: source["LAST_FM_API_KEY"],
       apiSecret: source["LAST_FM_API_SECRET"],
     },
+    session: {
+      filePath: source["SESSION_FILE_PATH"],
+    },
   })
+}
+
+type LoggingDestination =
+  | {
+      type: "stdout"
+    }
+  | {
+      type: "file"
+      path: string
+    }
+
+function stringToLoggingDestination(str: string): LoggingDestination {
+  if (str === "stdout") {
+    return {
+      type: "stdout",
+    }
+  } else {
+    return {
+      type: "file",
+      path: str,
+    }
+  }
 }
