@@ -1,7 +1,21 @@
 import { z } from "zod"
 
 const configuration = z.object({
-  logLevel: z.string().default("info"),
+  log: z.object({
+    level: z.string().default("info"),
+    destination: z.string().transform((d) => {
+      if (d === "stdout") {
+        return {
+          type: "stdout",
+        }
+      } else {
+        return {
+          type: "file",
+          path: d,
+        }
+      }
+    }),
+  }),
   bluOs: z.object({
     ip: z.string(),
     port: z.string().transform(Number),
@@ -18,6 +32,10 @@ export function parseConfiguration(
   source: Partial<Record<string, string>>,
 ): Configuration {
   return configuration.parse({
+    log: {
+      level: source["LOG_LEVEL"],
+      destination: source["LOG_DEST"],
+    },
     logLevel: source["LOG_LEVEL"],
     bluOs: {
       ip: source["BLUOS_IP"],

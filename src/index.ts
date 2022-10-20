@@ -17,10 +17,14 @@ process
 async function createScrobbler(config: Configuration): Promise<Subscription> {
   const logger = pino(
     {
-      level: config.logLevel,
+      level: config.log.level,
       name: "blu-hawaii",
     },
-    pino.destination("./logs/blu-hawaii.log"),
+    pino.destination(
+      config.log.destination.type === "stdout"
+        ? 0
+        : config.log.destination.path,
+    ),
   )
 
   const bluOsConfig = {
