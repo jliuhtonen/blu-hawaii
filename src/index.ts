@@ -5,6 +5,13 @@ import { obtainSessionToken } from "./session.js"
 import { scrobbleTrack, updateNowPlaying } from "./submitTrack.js"
 import { pino } from "pino"
 
+const subscriptions = await createScrobbler()
+
+process
+  .once("SIGINT", shutdown)
+  .once("SIGTERM", shutdown)
+  .once("uncaughtException", handleUncaughtError)
+
 async function createScrobbler(): Promise<Subscription> {
   const logger = pino(
     {
@@ -60,13 +67,6 @@ async function createScrobbler(): Promise<Subscription> {
 
   return subscriptions
 }
-
-const subscriptions = await createScrobbler()
-
-process
-  .once("SIGINT", shutdown)
-  .once("SIGTERM", shutdown)
-  .once("uncaughtException", handleUncaughtError)
 
 function handleUncaughtError(err: unknown, origin: string) {
   console.error(`Caught unknown error from ${origin}...`)
