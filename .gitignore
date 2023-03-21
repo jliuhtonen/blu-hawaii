@@ -6,3 +6,4 @@ node_modules/
 *.tsbuildinfo
 .env
 .blu-hawaii-session
+blu-hawaii.tar
