@@ -1,17 +1,19 @@
 import { got } from "../node_modules/got/dist/source/index.js"
 import {
   BehaviorSubject,
-  filter,
-  from,
+  defer,
   map,
   Observable,
+  of,
+  retry,
   share,
   switchMap,
   tap,
+  throwError,
 } from "rxjs"
 import { xml2js } from "xml-js"
 import * as zod from "zod"
-import { Logger } from "pino"
+import { Logger, LoggerOptions } from "pino"
 
 export interface BluOsConfig {
   ip: string
@@ -27,6 +29,7 @@ export interface StatusQueryResponse {
 export type PlayingTrack = zod.infer<typeof xmlJsStatus>
 
 const longPollTimeoutSecs = 100
+const httpRequestTimeoutMillis = longPollTimeoutSecs * 1000 + 2
 const trackPlayingStates = ["play", "stream"]
 
 export function createBluOsStatusObservable({
@@ -41,27 +44,47 @@ export function createBluOsStatusObservable({
   )
 
   const bluOsStatus = previousResponseEtag.pipe(
-    switchMap((etag) => {
-      return from(
-        Promise.resolve(
-          got.get(statusUrl, {
-            searchParams: { etag, timeout: longPollTimeoutSecs },
-          }),
-        ),
-      )
-    }),
-    filter((r) => r.statusCode === 200),
-    map((r) => parseBluOsStatus(r.body)),
+    switchMap((etag) => fetchBluOsStatus(logger, statusUrl, etag)),
+    map((r) => parseBluOsStatus(r)),
     tap((status: StatusQueryResponse) => {
       logger.debug({ bluOsStatus: status })
       if (status !== undefined) {
         previousResponseEtag.next(status.etag)
+      } else {
+        previousResponseEtag.next(undefined)
       }
     }),
     share(),
   )
 
   return bluOsStatus
+}
+
+function fetchBluOsStatus(
+  logger: Logger<LoggerOptions>,
+  statusUrl: string,
+  etag: string | undefined,
+): Observable<string> {
+  return defer(() => {
+    logger.debug(`Calling BluOS status API with etag ${etag}`)
+    return Promise.resolve(
+      got.get(statusUrl, {
+        searchParams: { etag, timeout: longPollTimeoutSecs },
+        timeout: { request: httpRequestTimeoutMillis },
+      }),
+    )
+  }).pipe(
+    switchMap((response): Observable<string> => {
+      if (!response.ok) {
+        return throwError(
+          () => new Error(`Non-ok status code ${response.statusCode}`),
+        )
+      }
+
+      return of(response.body)
+    }),
+    retry({ delay: 10000 }),
+  )
 }
 
 export function isTrackPlaying(t: PlayingTrack) {
