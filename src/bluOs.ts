@@ -1,17 +1,9 @@
-import { got } from "../node_modules/got/dist/source/index.js"
-import {
-  BehaviorSubject,
-  filter,
-  from,
-  map,
-  Observable,
-  share,
-  switchMap,
-  tap,
-} from "rxjs"
+import { got, Response } from "../node_modules/got/dist/source/index.js"
+import { BehaviorSubject, map, Observable, share, switchMap, tap } from "rxjs"
 import { xml2js } from "xml-js"
 import * as zod from "zod"
-import { Logger } from "pino"
+import { Logger, LoggerOptions } from "pino"
+import { asRetryable } from "./requestUtil.js"
 
 export interface BluOsConfig {
   ip: string
@@ -27,6 +19,7 @@ export interface StatusQueryResponse {
 export type PlayingTrack = zod.infer<typeof xmlJsStatus>
 
 const longPollTimeoutSecs = 100
+const httpRequestTimeoutMillis = longPollTimeoutSecs * 1000 + 2
 const trackPlayingStates = ["play", "stream"]
 
 export function createBluOsStatusObservable({
@@ -41,21 +34,16 @@ export function createBluOsStatusObservable({
   )
 
   const bluOsStatus = previousResponseEtag.pipe(
-    switchMap((etag) => {
-      return from(
-        Promise.resolve(
-          got.get(statusUrl, {
-            searchParams: { etag, timeout: longPollTimeoutSecs },
-          }),
-        ),
-      )
-    }),
-    filter((r) => r.statusCode === 200),
-    map((r) => parseBluOsStatus(r.body)),
+    switchMap((etag) =>
+      asRetryable(() => fetchBluOsStatus(logger, statusUrl, etag)),
+    ),
+    map((r) => parseBluOsStatus(r)),
     tap((status: StatusQueryResponse) => {
       logger.debug({ bluOsStatus: status })
       if (status !== undefined) {
         previousResponseEtag.next(status.etag)
+      } else {
+        previousResponseEtag.next(undefined)
       }
     }),
     share(),
@@ -76,6 +64,20 @@ export function hasPlayedOverThreshold(t: PlayingTrack, threshold: number) {
   return (
     t.secs / longPollTimeoutSecs >=
     (t.totalLength / longPollTimeoutSecs) * threshold
+  )
+}
+
+function fetchBluOsStatus(
+  logger: Logger<LoggerOptions>,
+  statusUrl: string,
+  etag: string | undefined,
+): Promise<Response<string>> {
+  logger.debug(`Calling BluOS status API with etag ${etag}`)
+  return Promise.resolve(
+    got.get(statusUrl, {
+      searchParams: { etag, timeout: longPollTimeoutSecs },
+      timeout: { request: httpRequestTimeoutMillis },
+    }),
   )
 }
 

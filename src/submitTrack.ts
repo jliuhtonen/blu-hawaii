@@ -1,4 +1,14 @@
-import { Observable, distinctUntilChanged, mergeMap, from, filter } from "rxjs"
+import {
+  Observable,
+  distinctUntilChanged,
+  mergeMap,
+  from,
+  filter,
+  defer,
+  retry,
+  catchError,
+  of,
+} from "rxjs"
 import {
   hasPlayedOverThreshold,
   isSameTrack,
@@ -23,6 +33,14 @@ export function updateNowPlaying(
           album: t.album,
           track: t.title,
         }),
+      ).pipe(
+        catchError((e) =>
+          of({
+            type: "error",
+            error: e,
+            message: "Unable to update now playing track",
+          }),
+        ),
       ),
     ),
   )
@@ -37,7 +55,7 @@ export function scrobbleTrack(
     filter(shouldScrobble),
     distinctUntilChanged(isSameTrack),
     mergeMap((t) =>
-      from(
+      defer(() =>
         lastFm.scrobbleTrack(lastFmConfig, sessionToken, {
           artist: t.artist,
           album: t.album,
@@ -45,6 +63,15 @@ export function scrobbleTrack(
           duration: t.totalLength,
           timestamp: Math.floor(Date.now() / 1000),
         }),
+      ).pipe(
+        retry({ delay: 20000, count: 5 }),
+        catchError((e) =>
+          of({
+            type: "error",
+            error: e,
+            message: "Unable to scrobble track",
+          }),
+        ),
       ),
     ),
   )
