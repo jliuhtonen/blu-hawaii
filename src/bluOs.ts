@@ -1,19 +1,9 @@
-import { got } from "../node_modules/got/dist/source/index.js"
-import {
-  BehaviorSubject,
-  defer,
-  map,
-  Observable,
-  of,
-  retry,
-  share,
-  switchMap,
-  tap,
-  throwError,
-} from "rxjs"
+import { got, Response } from "../node_modules/got/dist/source/index.js"
+import { BehaviorSubject, map, Observable, share, switchMap, tap } from "rxjs"
 import { xml2js } from "xml-js"
 import * as zod from "zod"
 import { Logger, LoggerOptions } from "pino"
+import { asRetryable } from "./requestUtil.js"
 
 export interface BluOsConfig {
   ip: string
@@ -44,7 +34,9 @@ export function createBluOsStatusObservable({
   )
 
   const bluOsStatus = previousResponseEtag.pipe(
-    switchMap((etag) => fetchBluOsStatus(logger, statusUrl, etag)),
+    switchMap((etag) =>
+      asRetryable(() => fetchBluOsStatus(logger, statusUrl, etag)),
+    ),
     map((r) => parseBluOsStatus(r)),
     tap((status: StatusQueryResponse) => {
       logger.debug({ bluOsStatus: status })
@@ -60,33 +52,6 @@ export function createBluOsStatusObservable({
   return bluOsStatus
 }
 
-function fetchBluOsStatus(
-  logger: Logger<LoggerOptions>,
-  statusUrl: string,
-  etag: string | undefined,
-): Observable<string> {
-  return defer(() => {
-    logger.debug(`Calling BluOS status API with etag ${etag}`)
-    return Promise.resolve(
-      got.get(statusUrl, {
-        searchParams: { etag, timeout: longPollTimeoutSecs },
-        timeout: { request: httpRequestTimeoutMillis },
-      }),
-    )
-  }).pipe(
-    switchMap((response): Observable<string> => {
-      if (!response.ok) {
-        return throwError(
-          () => new Error(`Non-ok status code ${response.statusCode}`),
-        )
-      }
-
-      return of(response.body)
-    }),
-    retry({ delay: 10000 }),
-  )
-}
-
 export function isTrackPlaying(t: PlayingTrack) {
   return trackPlayingStates.includes(t.state)
 }
@@ -99,6 +64,20 @@ export function hasPlayedOverThreshold(t: PlayingTrack, threshold: number) {
   return (
     t.secs / longPollTimeoutSecs >=
     (t.totalLength / longPollTimeoutSecs) * threshold
+  )
+}
+
+function fetchBluOsStatus(
+  logger: Logger<LoggerOptions>,
+  statusUrl: string,
+  etag: string | undefined,
+): Promise<Response<string>> {
+  logger.debug(`Calling BluOS status API with etag ${etag}`)
+  return Promise.resolve(
+    got.get(statusUrl, {
+      searchParams: { etag, timeout: longPollTimeoutSecs },
+      timeout: { request: httpRequestTimeoutMillis },
+    }),
   )
 }
 
