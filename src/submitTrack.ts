@@ -8,6 +8,7 @@ import {
   retry,
   catchError,
   of,
+  map,
 } from "rxjs"
 import {
   hasPlayedOverThreshold,
@@ -16,14 +17,25 @@ import {
   PlayingTrack,
 } from "./bluOs.js"
 import * as lastFm from "./lastFm.js"
+import { MaybeUnknown } from "./util.js"
 
 const scrobbleThreshold = 0.5
+
+type SubmitResult<A> =
+  | { type: "success"; result: A }
+  | { type: "error"; error: Error; message: string }
+
+type UpdateNowPlayingResult = SubmitResult<
+  MaybeUnknown<lastFm.NowPlayingResponse>
+>
+
+type SubmitScrobbleResult = SubmitResult<MaybeUnknown<lastFm.ScrobblesResponse>>
 
 export function updateNowPlaying(
   lastFmConfig: lastFm.LastFmConfig,
   sessionToken: string,
   playingTrack: Observable<PlayingTrack>,
-): Observable<unknown> {
+): Observable<UpdateNowPlayingResult> {
   return playingTrack.pipe(
     distinctUntilChanged(isSameTrack),
     mergeMap((t) =>
@@ -34,12 +46,14 @@ export function updateNowPlaying(
           track: t.title,
         }),
       ).pipe(
-        catchError((e) =>
-          of({
-            type: "error",
-            error: e,
-            message: "Unable to update now playing track",
-          }),
+        map((result): UpdateNowPlayingResult => ({ type: "success", result })),
+        catchError(
+          (e): Observable<UpdateNowPlayingResult> =>
+            of({
+              type: "error",
+              error: e,
+              message: "Unable to update now playing track",
+            }),
         ),
       ),
     ),
@@ -50,7 +64,7 @@ export function scrobbleTrack(
   lastFmConfig: lastFm.LastFmConfig,
   sessionToken: string,
   playingTrack: Observable<PlayingTrack>,
-): Observable<unknown> {
+): Observable<SubmitScrobbleResult> {
   return playingTrack.pipe(
     filter(shouldScrobble),
     distinctUntilChanged(isSameTrack),
@@ -65,12 +79,14 @@ export function scrobbleTrack(
         }),
       ).pipe(
         retry({ delay: 20000, count: 5 }),
-        catchError((e) =>
-          of({
-            type: "error",
-            error: e,
-            message: "Unable to scrobble track",
-          }),
+        map((result): SubmitScrobbleResult => ({ type: "success", result })),
+        catchError(
+          (e): Observable<SubmitScrobbleResult> =>
+            of({
+              type: "error",
+              error: e,
+              message: "Unable to scrobble track",
+            }),
         ),
       ),
     ),
