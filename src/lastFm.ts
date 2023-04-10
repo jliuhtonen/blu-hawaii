@@ -3,6 +3,8 @@ import { URLSearchParams } from "url"
 import * as zod from "zod"
 import crypto from "node:crypto"
 import { Logger } from "pino"
+import { z } from "zod"
+import { knownValue, MaybeUnknown, unknownValue } from "./util.js"
 
 const baseUrl = "https://ws.audioscrobbler.com/2.0"
 
@@ -67,7 +69,7 @@ export async function scrobbleTrack(
   config: LastFmConfig,
   sessionKey: string,
   track: LastFmTrack,
-): Promise<unknown> {
+): Promise<MaybeUnknown<ScrobblesResponse>> {
   config.logger.debug({ msg: "Scrobbling track", track })
   const callParams = {
     ...track,
@@ -83,7 +85,13 @@ export async function scrobbleTrack(
   }
 
   const response = await got.post(baseUrl, { form: body }).json()
-  return response
+  const maybeResponse = scrobblesResponse.safeParse(response)
+  if (maybeResponse.success) {
+    return knownValue(maybeResponse.data)
+  } else {
+    config.logger.error(maybeResponse.error, "Unable to parse response")
+    return unknownValue(response)
+  }
 }
 
 export interface NowPlayingTrack {
@@ -96,7 +104,7 @@ export async function nowPlaying(
   config: LastFmConfig,
   sessionKey: string,
   track: NowPlayingTrack,
-): Promise<unknown> {
+): Promise<MaybeUnknown<NowPlayingResponse>> {
   config.logger.debug({ msg: "Updating now playing", track })
   const callParams = {
     ...track,
@@ -111,8 +119,14 @@ export async function nowPlaying(
     format: "json",
   }
 
-  const response = got.post(baseUrl, { form: body }).json()
-  return response
+  const response = await got.post(baseUrl, { form: body }).json()
+  const playingResponse = nowPlayingResponse.safeParse(response)
+  if (playingResponse.success) {
+    return knownValue(playingResponse.data)
+  } else {
+    config.logger.error(playingResponse.error, "Unable to parse response")
+    return unknownValue(response)
+  }
 }
 
 function createApiSignature(
@@ -144,3 +158,53 @@ const sessionResponse = zod.object({
 const tokenResponse = zod.object({
   token: zod.string(),
 })
+
+const textNode = zod.object({
+  "#text": zod.string(),
+})
+
+const scrobbleInfoField = z
+  .intersection(
+    textNode,
+    zod.object({
+      corrected: zod.union([zod.literal("0"), zod.literal("1")]),
+    }),
+  )
+  .transform((r) => ({
+    value: r["#text"],
+    corrected: r.corrected === "1",
+  }))
+
+const scrobble = zod.object({
+  artist: scrobbleInfoField,
+  album: scrobbleInfoField,
+  albumArtist: scrobbleInfoField,
+  track: scrobbleInfoField,
+  ignoredMessage: z
+    .intersection(
+      textNode,
+      z.object({
+        code: z.string(),
+      }),
+    )
+    .transform((v) => ({ code: v.code, value: v["#text"] })),
+})
+
+const scrobbleResponse = zod.object({
+  scrobble,
+})
+
+const scrobblesResponse = zod
+  .object({
+    scrobbles: z.union([scrobbleResponse, z.array(scrobbleResponse)]),
+  })
+  .transform((r) =>
+    Array.isArray(r.scrobbles) ? r : { scrobbles: [r.scrobbles] },
+  )
+
+const nowPlayingResponse = zod.object({
+  nowplaying: scrobble,
+})
+
+export type ScrobblesResponse = z.infer<typeof scrobblesResponse>
+export type NowPlayingResponse = z.infer<typeof nowPlayingResponse>

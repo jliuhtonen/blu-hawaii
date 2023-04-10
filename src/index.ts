@@ -63,12 +63,26 @@ async function createScrobbler(config: Configuration): Promise<Subscription> {
   const scrobbledTrack = scrobbleTrack(lastFmConfig, sessionToken, playingTrack)
 
   const subscriptions = updatedNowPlayingTrack.subscribe((response) => {
-    logger.info({ updatedNowPlaying: response })
+    switch (response.type) {
+      case "error":
+        logger.error(response.error, response.message)
+        return
+      case "success":
+        logger.info(response.result.value, "Updated now playing track")
+        return
+    }
   })
 
   subscriptions.add(
-    scrobbledTrack.subscribe((scrobbleResponse) => {
-      logger.info({ scrobble: scrobbleResponse })
+    scrobbledTrack.subscribe((response) => {
+      switch (response.type) {
+        case "error":
+          logger.error(response.error, response.message)
+          return
+        case "success":
+          logger.info(response.result.value, "Scrobbled track")
+          return
+      }
     }),
   )
 
