@@ -5,10 +5,12 @@ const configuration = z.object({
     level: z.string().default("info"),
     destination: z.string().transform(stringToLoggingDestination),
   }),
-  bluOs: z.object({
-    ip: z.string(),
-    port: z.string().transform(Number),
-  }),
+  bluOs: z
+    .object({
+      ip: z.string(),
+      port: z.string().transform(Number),
+    })
+    .optional(),
   lastFm: z.object({
     apiKey: z.string(),
     apiSecret: z.string(),
@@ -29,10 +31,12 @@ export function parseConfiguration(
       destination: source["LOG_DEST"],
     },
     logLevel: source["LOG_LEVEL"],
-    bluOs: {
-      ip: source["BLUOS_IP"],
-      port: source["BLUOS_PORT"],
-    },
+    bluOs:
+      (source["BLUOS_IP"] && {
+        ip: source["BLUOS_IP"],
+        port: source["BLUOS_PORT"],
+      }) ||
+      undefined,
     lastFm: {
       apiKey: source["LAST_FM_API_KEY"],
       apiSecret: source["LAST_FM_API_SECRET"],

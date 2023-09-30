@@ -1,10 +1,11 @@
 import "dotenv/config"
-import { filter, map, Subscription } from "rxjs"
+import { filter, map, merge, mergeMap, Subscription, tap } from "rxjs"
 import { createBluOsStatusObservable, PlayingTrack } from "./bluOs.js"
 import { obtainSessionToken } from "./session.js"
 import { scrobbleTrack, updateNowPlaying } from "./submitTrack.js"
 import { pino } from "pino"
 import { Configuration, parseConfiguration } from "./configuration.js"
+import { discoverPlayersObservable, Player } from "./playerDiscovery.js"
 
 const config = parseConfiguration(process.env)
 const subscriptions = await createScrobbler(config)
@@ -27,10 +28,12 @@ async function createScrobbler(config: Configuration): Promise<Subscription> {
     ),
   )
 
+  /*
   const bluOsConfig = {
     ...config.bluOs,
     logger: logger.child({ component: "bluOS" }),
   }
+  */
 
   const lastFmConfig = {
     ...config.lastFm,
@@ -47,7 +50,26 @@ async function createScrobbler(config: Configuration): Promise<Subscription> {
     process.exit(1)
   }
 
-  const bluOsStatus = createBluOsStatusObservable(bluOsConfig)
+  const bluOsStatus = config.bluOs
+    ? createBluOsStatusObservable({
+        ...config.bluOs,
+        logger: logger.child({ component: "bluOS" }),
+      })
+    : discoverPlayersObservable().pipe(
+        tap((players: Player[]) =>
+          logger.debug({ players }, "Discovered players"),
+        ),
+        mergeMap((players: Player[]) =>
+          merge(
+            ...players.map((p) =>
+              createBluOsStatusObservable({
+                ...p,
+                logger: logger.child({ component: "bluOS" }),
+              }),
+            ),
+          ),
+        ),
+      )
 
   const playingTrack = bluOsStatus.pipe(
     map((s) => s.playingTrack),
