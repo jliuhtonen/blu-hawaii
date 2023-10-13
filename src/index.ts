@@ -28,13 +28,6 @@ async function createScrobbler(config: Configuration): Promise<Subscription> {
     ),
   )
 
-  /*
-  const bluOsConfig = {
-    ...config.bluOs,
-    logger: logger.child({ component: "bluOS" }),
-  }
-  */
-
   const lastFmConfig = {
     ...config.lastFm,
     logger: logger.child({ component: "lastFm" }),
