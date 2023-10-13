@@ -1,9 +1,21 @@
 import "dotenv/config"
-import { filter, map, merge, mergeMap, Subscription, tap } from "rxjs"
-import { createBluOsStatusObservable, PlayingTrack } from "./bluOs/player.js"
+import {
+  filter,
+  map,
+  merge,
+  mergeMap,
+  Observable,
+  Subscription,
+  tap,
+} from "rxjs"
+import {
+  createBluOsStatusObservable,
+  PlayingTrack,
+  StatusQueryResponse,
+} from "./bluOs/player.js"
 import { obtainSessionToken } from "./session.js"
 import { scrobbleTrack, updateNowPlaying } from "./submitTrack.js"
-import { pino } from "pino"
+import { Logger, pino } from "pino"
 import { Configuration, parseConfiguration } from "./configuration.js"
 import { discoverPlayersObservable, Player } from "./bluOs/serviceDiscovery.js"
 
@@ -48,21 +60,7 @@ async function createScrobbler(config: Configuration): Promise<Subscription> {
         ...config.bluOs,
         logger: logger.child({ component: "bluOS" }),
       })
-    : discoverPlayersObservable().pipe(
-        tap((players: Player[]) =>
-          logger.debug({ players }, "Discovered players"),
-        ),
-        mergeMap((players: Player[]) =>
-          merge(
-            ...players.map((p) =>
-              createBluOsStatusObservable({
-                ...p,
-                logger: logger.child({ component: "bluOS" }),
-              }),
-            ),
-          ),
-        ),
-      )
+    : createDiscoveredPlayersStatusObservable(logger)
 
   const playingTrack = bluOsStatus.pipe(
     map((s) => s.playingTrack),
@@ -102,6 +100,24 @@ async function createScrobbler(config: Configuration): Promise<Subscription> {
   )
 
   return subscriptions
+}
+
+function createDiscoveredPlayersStatusObservable(
+  logger: Logger,
+): Observable<StatusQueryResponse> {
+  return discoverPlayersObservable().pipe(
+    tap((players: Player[]) => logger.debug({ players }, "Discovered players")),
+    mergeMap((players: Player[]) =>
+      merge(
+        ...players.map((p) =>
+          createBluOsStatusObservable({
+            ...p,
+            logger: logger.child({ component: "bluOS" }),
+          }),
+        ),
+      ),
+    ),
+  )
 }
 
 function handleUncaughtError(err: unknown, origin: string) {
