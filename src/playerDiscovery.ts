@@ -72,9 +72,8 @@ export const discoverPlayersObservable = (): Observable<Player[]> =>
       },
       {},
     ),
-    map((announcements): AnnounceMessage[] => Object.values(announcements)),
-    map((a) =>
-      a.flatMap((a) =>
+    map((announcements) =>
+      Object.values(announcements).flatMap((a) =>
         a.records
           .filter((r) => r.classId === playerClassId)
           .map((r) => ({ ip: a.address, port: Number(r.txtRecords["port"]!) })),
