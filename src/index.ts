@@ -1,11 +1,11 @@
 import "dotenv/config"
 import { filter, map, merge, mergeMap, Subscription, tap } from "rxjs"
-import { createBluOsStatusObservable, PlayingTrack } from "./bluOs.js"
+import { createBluOsStatusObservable, PlayingTrack } from "./bluOs/player.js"
 import { obtainSessionToken } from "./session.js"
 import { scrobbleTrack, updateNowPlaying } from "./submitTrack.js"
 import { pino } from "pino"
 import { Configuration, parseConfiguration } from "./configuration.js"
-import { discoverPlayersObservable, Player } from "./playerDiscovery.js"
+import { discoverPlayersObservable, Player } from "./bluOs/serviceDiscovery.js"
 
 const config = parseConfiguration(process.env)
 const subscriptions = await createScrobbler(config)

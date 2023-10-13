@@ -1,9 +1,9 @@
-import { got, Response } from "../node_modules/got/dist/source/index.js"
+import { got, Response } from "got"
 import { BehaviorSubject, map, Observable, share, switchMap, tap } from "rxjs"
 import { xml2js } from "xml-js"
 import * as zod from "zod"
 import { Logger, LoggerOptions } from "pino"
-import { asRetryable } from "./requestUtil.js"
+import { asRetryable } from "../requestUtil.js"
 
 export interface BluOsConfig {
   ip: string
