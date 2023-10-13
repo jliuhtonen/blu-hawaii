@@ -7,6 +7,7 @@ import {
   ReceivedPacket,
   createConnection,
 } from "@jliuhtonen/nightvision"
+import { omit } from "./util.js"
 
 const playerClassId = "0001"
 const supportedMessageTypes: ReceivedMessage["type"][] = ["announce", "delete"]
@@ -66,8 +67,7 @@ export const discoverPlayersObservable = (): Observable<Player[]> =>
               [message.nodeId]: message,
             }
           case "delete":
-            delete acc[message.nodeId]
-            return acc
+            return omit(acc, message.nodeId)
         }
       },
       {},

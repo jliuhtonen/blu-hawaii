@@ -10,3 +10,10 @@ export const unknownValue = <A>(value: unknown): MaybeUnknown<A> => ({
   type: "unknown",
   value,
 })
+
+export const omit = <T extends {}, K extends keyof T>(obj: T, key: K): T => {
+  const newObj = { ...obj }
+  delete newObj[key]
+
+  return newObj
+}
