@@ -1,4 +1,12 @@
-import { Observable, filter, from, map, scan, switchMap } from "rxjs"
+import {
+  Observable,
+  distinctUntilChanged,
+  filter,
+  from,
+  map,
+  scan,
+  switchMap,
+} from "rxjs"
 import {
   AnnounceMessage,
   DeleteMessage,
@@ -7,6 +15,7 @@ import {
   ReceivedPacket,
   createConnection,
 } from "@jliuhtonen/nightvision"
+import { omit } from "../util.js"
 
 const playerClassId = "0001"
 const supportedMessageTypes: ReceivedMessage["type"][] = ["announce", "delete"]
@@ -48,6 +57,8 @@ const discoverPlayersWithLsdp = (): Observable<Packet> =>
     }),
   )
 
+type ServiceRecord = Partial<Record<string, AnnounceMessage>>
+
 export const discoverPlayersObservable = (): Observable<Player[]> =>
   discoverPlayersWithLsdp().pipe(
     filter(
@@ -57,27 +68,27 @@ export const discoverPlayersObservable = (): Observable<Player[]> =>
     filter((message): message is SupportedMessageType =>
       supportedMessageTypes.includes(message.type),
     ),
-    scan(
-      (acc: Record<string, AnnounceMessage>, message: SupportedMessageType) => {
-        switch (message.type) {
-          case "announce":
-            return {
-              ...acc,
-              [message.nodeId]: message,
-            }
-          case "delete":
-            delete acc[message.nodeId]
-            return acc
-        }
-      },
-      {},
-    ),
-    map((announcements): AnnounceMessage[] => Object.values(announcements)),
-    map((a) =>
-      a.flatMap((a) =>
-        a.records
-          .filter((r) => r.classId === playerClassId)
-          .map((r) => ({ ip: a.address, port: Number(r.txtRecords["port"]!) })),
+    scan((acc: ServiceRecord, message: SupportedMessageType) => {
+      switch (message.type) {
+        case "announce":
+          return {
+            ...acc,
+            [message.nodeId]: message,
+          }
+        case "delete":
+          return omit(acc, message.nodeId)
+      }
+    }, {}),
+    map((announcements: ServiceRecord) =>
+      Object.values(announcements).flatMap(
+        (a: AnnounceMessage | undefined): Player[] =>
+          a?.records
+            .filter((r) => r.classId === playerClassId)
+            .map((r) => ({
+              ip: a.address,
+              port: Number(r.txtRecords["port"]!),
+            })) || [],
       ),
     ),
+    distinctUntilChanged((a, b) => JSON.stringify(a) === JSON.stringify(b)),
   )

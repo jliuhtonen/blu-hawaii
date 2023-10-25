@@ -15,7 +15,7 @@ import {
   isSameTrack,
   isTrackPlaying,
   PlayingTrack,
-} from "./bluOs.js"
+} from "./bluOs/player.js"
 import * as lastFm from "./lastFm.js"
 import { MaybeUnknown } from "./util.js"
 
