@@ -1,4 +1,12 @@
-import { Observable, filter, from, map, scan, switchMap } from "rxjs"
+import {
+  Observable,
+  distinctUntilChanged,
+  filter,
+  from,
+  map,
+  scan,
+  switchMap,
+} from "rxjs"
 import {
   AnnounceMessage,
   DeleteMessage,
@@ -82,4 +90,5 @@ export const discoverPlayersObservable = (): Observable<Player[]> =>
             })) || [],
       ),
     ),
+    distinctUntilChanged((a, b) => JSON.stringify(a) === JSON.stringify(b)),
   )
