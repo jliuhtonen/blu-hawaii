@@ -1,9 +1,14 @@
 import { got, Response } from "got"
-import { BehaviorSubject, map, Observable, share, switchMap, tap } from "rxjs"
+import { map, Observable, share, switchMap, tap } from "rxjs"
 import { xml2js } from "xml-js"
 import * as zod from "zod"
 import { Logger, LoggerOptions } from "pino"
 import { asRetryable } from "../requestUtil.js"
+import {
+  cachedPlayerEtag,
+  cachePlayerEtag,
+  evictPlayerEtag,
+} from "./etagCache.js"
 
 export interface BluOsConfig {
   ip: string
@@ -29,11 +34,7 @@ export function createBluOsStatusObservable({
 }: BluOsConfig): Observable<StatusQueryResponse> {
   const statusUrl = `http://${ip}:${port}/Status`
 
-  const previousResponseEtag = new BehaviorSubject<string | undefined>(
-    undefined,
-  )
-
-  const bluOsStatus = previousResponseEtag.pipe(
+  const bluOsStatus = cachedPlayerEtag(ip).pipe(
     switchMap((etag) =>
       asRetryable(() => fetchBluOsStatus(logger, statusUrl, etag)),
     ),
@@ -41,9 +42,9 @@ export function createBluOsStatusObservable({
     tap((status: StatusQueryResponse) => {
       logger.debug({ bluOsStatus: status })
       if (status !== undefined) {
-        previousResponseEtag.next(status.etag)
+        cachePlayerEtag(ip, status.etag)
       } else {
-        previousResponseEtag.next(undefined)
+        evictPlayerEtag(ip)
       }
     }),
     share(),
