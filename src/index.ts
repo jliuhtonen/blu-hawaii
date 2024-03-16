@@ -5,6 +5,7 @@ import {
   merge,
   mergeMap,
   Observable,
+  share,
   Subscription,
   tap,
 } from "rxjs"
@@ -117,6 +118,7 @@ function createDiscoveredPlayersStatusObservable(
         ),
       ),
     ),
+    share(),
   )
 }
 
