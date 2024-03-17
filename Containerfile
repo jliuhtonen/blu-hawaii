@@ -1,4 +1,4 @@
-FROM node:18-bullseye-slim AS base
+FROM node:20.11-bookworm-slim AS base
 
 FROM base AS builder
 
