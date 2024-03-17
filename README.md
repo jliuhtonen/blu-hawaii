@@ -1,10 +1,12 @@
-# blu-hawaii
+# blu-hawaii 🍹
 
-blu-hawaii enables you to send whatever you are playing on your [BluOS player](https://bluos.net/) to Last.fm. It is intended to run in the background on a server-like computer that can access the BluOS player with TCP.
+blu-hawaii enables you to send whatever you are playing on your [BluOS player](https://bluos.net/) to Last.fm. It is intended to run in the background on a server-like computer that can access the BluOS player with TCP. To use blu-hawaii you will currently need your own set of Last.fm API keys. If you don't have an API key and secret, you can [create API credentials on Last.fm](https://www.last.fm/api/account/create).
+
+A [docker image](https://hub.docker.com/r/jliuhtonen/blu-hawaii/) is available on Dockerhub.
 
 ## Service discovery
 
-If you do not provide ip address and port of your BluOS player, blu-hawaii will try to discover all players on the network using Lenbrook Service Discovery Protocol (LSDP) that is based on UDP broadcast. This requires that your BluOS players are reachable in the same network as the computer running blu-hawaii.
+If you do not provide ip address and port of your BluOS player, blu-hawaii will try to discover all players on the network using Lenbrook Service Discovery Protocol (LSDP) that is based on UDP broadcast. This requires that your BluOS players are reachable in the same network as the computer running blu-hawaii. For the service discovery to work, blu-hawaii needs to be able to listen for UDP broadcast traffic to port `11430`, be sure to open it from your firewall if you want to use this feature.
 
 If you cannot use service discovery, you can always find out the IP address of your BluOS player from the BluOS app. The port is usually `11000`.
 
@@ -22,8 +24,6 @@ blu-hawaii supports configuration with the following environment variables:
 
 You can also use a `.env` file. See [configuration.ts](src/configuration.ts) for all the details.
 
-If you don't have an API key and secret, you can [create API credentials on Last.fm](https://www.last.fm/api/account/create).
-
 ## Running
 
 On the first run, you need to approve the login in Last.fm UI, so blu-hawaii starts in "interactive mode" prompting you to make the approval.
@@ -39,4 +39,12 @@ So if you are running the process inside a container, for example, it is a good 
 
 ### Running in container
 
-There is a [Containerfile](Containerfile) for building and running blu-hawaii containerized. It has currently been tested with [Podman](https://podman.io/). _Note that service discovery via UDP broadcast does not work from container networks!_
+There is a [Containerfile](Containerfile) for building and running blu-hawaii containerized and the image is released to [Dockerhub](https://hub.docker.com/r/jliuhtonen/blu-hawaii/).
+
+To run the container in a production like setting, you'd want to do something like this
+
+```
+podman run --replace -d --name=blu-hawaii --network=host --mount type=volume,src=blu-hawaii-home,dst=/home/blu-hawaii --mount type=volume,src=blu-hawaii-logs,dst=/var/log/blu-hawaii -e LAST_FM_API_KEY=xxx -e LAST_FM_API_SECRET=yyy docker.io/jliuhtonen/blu-hawaii:latest
+```
+
+_Note that this uses the host network mode to be able to receive UDP broadcast traffic needed for LDSP discovery! You might want to disable service discovery and specify IP and port instead in some settings._
