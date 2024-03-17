@@ -2,7 +2,7 @@ import { got, Response } from "got"
 import { map, Observable, share, switchMap, tap } from "rxjs"
 import { xml2js } from "xml-js"
 import * as zod from "zod"
-import { Logger, LoggerOptions } from "pino"
+import { Logger } from "pino"
 import { asRetryable } from "../requestUtil.js"
 import {
   cachedPlayerEtag,
@@ -69,7 +69,7 @@ export function hasPlayedOverThreshold(t: PlayingTrack, threshold: number) {
 }
 
 function fetchBluOsStatus(
-  logger: Logger<LoggerOptions>,
+  logger: Logger,
   statusUrl: string,
   etag: string | undefined,
 ): Promise<Response<string>> {
