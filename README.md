@@ -1,6 +1,6 @@
 # blu-hawaii
 
-blu-hawaii enables you to send whatever you are playing on your [BluOS player](https://bluos.net/) to Last.fm. It is intended to run in the background on a server-like computer in the same network as your BluOS player.
+blu-hawaii enables you to send whatever you are playing on your [BluOS player](https://bluos.net/) to Last.fm. It is intended to run in the background on a server-like computer that can access the BluOS player with TCP.
 
 ## Service discovery
 
@@ -39,4 +39,4 @@ So if you are running the process inside a container, for example, it is a good 
 
 ### Running in container
 
-There is a [Containerfile](Containerfile) for building and running blu-hawaii containerized. It has currently been tested with [Podman](https://podman.io/).
+There is a [Containerfile](Containerfile) for building and running blu-hawaii containerized. It has currently been tested with [Podman](https://podman.io/). _Note that service discovery via UDP broadcast does not work from container networks!_
