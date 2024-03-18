@@ -47,4 +47,4 @@ To run the container in a production like setting, you'd want to do something li
 podman run --replace -d --name=blu-hawaii --network=host --mount type=volume,src=blu-hawaii-home,dst=/home/blu-hawaii --mount type=volume,src=blu-hawaii-logs,dst=/var/log/blu-hawaii -e LAST_FM_API_KEY=xxx -e LAST_FM_API_SECRET=yyy docker.io/jliuhtonen/blu-hawaii:latest
 ```
 
-_Note that this uses the host network mode to be able to receive UDP broadcast traffic needed for LDSP discovery! You might want to disable service discovery and specify IP and port instead in some settings._
+_Note that this uses the host network mode to be able to receive UDP broadcast traffic needed for LSDP discovery! You might want to disable service discovery and specify IP and port instead in some settings._
