@@ -50,3 +50,13 @@ podman run --replace -d --name=blu-hawaii --network=host --mount type=volume,src
 ```
 
 _Note that this uses the host network mode to be able to receive UDP broadcast traffic needed for LSDP discovery! You might want to disable service discovery and specify IP and port instead in some settings._
+
+## Releasing
+
+To release a new version, do the following:
+
+```
+npm version [major|minor|patch]
+git push && git push --tags
+npm run release
+```
