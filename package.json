@@ -5,6 +5,7 @@
   "version": "1.1.0",
   "description": "Scrobble music played on BluOS players to Last.fm",
   "scripts": {
+    "lint": "prettier src --check",
     "format": "prettier src --write",
     "build": "npm run format && npx tsc",
     "start": "npm run build && node dist/index.js",
