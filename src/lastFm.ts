@@ -1,10 +1,15 @@
-import got from "../node_modules/got/dist/source/index.js"
+import ky from "ky"
 import { URLSearchParams } from "url"
 import * as zod from "zod"
 import crypto from "node:crypto"
 import { Logger } from "pino"
 import { z } from "zod"
-import { knownValue, MaybeUnknown, unknownValue } from "./util.js"
+import {
+  asUrlEncodedFormData,
+  knownValue,
+  MaybeUnknown,
+  unknownValue,
+} from "./util.js"
 
 const baseUrl = "https://ws.audioscrobbler.com/2.0"
 
@@ -28,7 +33,7 @@ export async function getAuthToken(apiKey: string): Promise<string> {
     api_key: apiKey,
     format: "json",
   }
-  const response = await got(baseUrl, { searchParams }).json()
+  const response = await ky(baseUrl, { searchParams }).json()
   return tokenResponse.parse(response).token
 }
 
@@ -47,7 +52,7 @@ export async function getSession(
     api_sig: apiSignature,
     format: "json",
   }
-  const response = await got(baseUrl, { searchParams }).json()
+  const response = await ky(baseUrl, { searchParams }).json()
   const parsedSession = sessionResponse.parse(response)
   config.logger.info({ msg: "Fetched Last.Fm session" })
   return parsedSession.session.key
@@ -78,13 +83,20 @@ export async function scrobbleTrack(
     sk: sessionKey,
   }
 
-  const body = {
+  const body = asUrlEncodedFormData({
     ...callParams,
     api_sig: createApiSignature(callParams, config.apiSecret),
     format: "json",
-  }
+  })
 
-  const response = await got.post(baseUrl, { form: body }).json()
+  const response = await ky
+    .post(baseUrl, {
+      body,
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+    })
+    .json()
   const maybeResponse = scrobblesResponse.safeParse(response)
   if (maybeResponse.success) {
     return knownValue(maybeResponse.data)
@@ -113,13 +125,20 @@ export async function nowPlaying(
     sk: sessionKey,
   }
 
-  const body = {
+  const body = asUrlEncodedFormData({
     ...callParams,
     api_sig: createApiSignature(callParams, config.apiSecret),
     format: "json",
-  }
+  })
 
-  const response = await got.post(baseUrl, { form: body }).json()
+  const response = await ky
+    .post(baseUrl, {
+      body,
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+    })
+    .json()
   const playingResponse = nowPlayingResponse.safeParse(response)
   if (playingResponse.success) {
     return knownValue(playingResponse.data)
