@@ -13,7 +13,7 @@
   "author": "Janne Liuhtonen",
   "license": "MIT",
   "devDependencies": {
-    "@types/node": "^20.11.28",
+    "@types/node": "^20.12.7",
     "prettier": "^3.2.5",
     "typescript": "^5.4.5"
   },
