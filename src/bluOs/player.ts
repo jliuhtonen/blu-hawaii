@@ -1,4 +1,4 @@
-import { got, Response } from "got"
+import ky from "ky"
 import { map, Observable, share, switchMap, tap } from "rxjs"
 import { xml2js } from "xml-js"
 import * as zod from "zod"
@@ -72,14 +72,19 @@ function fetchBluOsStatus(
   logger: Logger,
   statusUrl: string,
   etag: string | undefined,
-): Promise<Response<string>> {
+): Promise<string> {
   logger.debug(`Calling BluOS status API with etag ${etag}`)
-  return Promise.resolve(
-    got.get(statusUrl, {
-      searchParams: { etag, timeout: longPollTimeoutSecs },
-      timeout: { request: httpRequestTimeoutMillis },
-    }),
-  )
+  const queryObj = {
+    ...(etag ? { etag } : {}),
+    timeout: longPollTimeoutSecs.toString(),
+  }
+
+  return ky
+    .get(statusUrl, {
+      searchParams: new URLSearchParams(queryObj),
+      timeout: httpRequestTimeoutMillis,
+    })
+    .text()
 }
 
 function parseBluOsStatus(bluOsXml: string): StatusQueryResponse {
