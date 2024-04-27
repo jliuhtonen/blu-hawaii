@@ -2,7 +2,7 @@
 
 [![blu-hawaii CI](https://github.com/jliuhtonen/blu-hawaii/actions/workflows/blu-hawaii.yml/badge.svg)](https://github.com/jliuhtonen/blu-hawaii/actions/workflows/blu-hawaii.yml)
 
-blu-hawaii enables you to send whatever you are playing on your [BluOS player](https://bluos.io/) to Last.fm. It is intended to run in the background on a server-like computer that can access the BluOS player with TCP. To use blu-hawaii you will currently need your own set of Last.fm API keys. If you don't have an API key and secret, you can [create API credentials on Last.fm](https://www.last.fm/api/account/create).
+blu-hawaii enables you to scrobble what music you are playing on your [BluOS player](https://bluos.io/) like Bluesound Node to Last.fm. It is intended to run in the background on a server-like computer that can access the BluOS player. To use blu-hawaii you will currently need your own set of Last.fm API keys. If you don't have an API key and secret, you can [create API credentials on Last.fm](https://www.last.fm/api/account/create).
 
 A [docker image](https://hub.docker.com/r/jliuhtonen/blu-hawaii/) is available on Dockerhub.
 
