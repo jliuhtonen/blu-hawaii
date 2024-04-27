@@ -26,6 +26,20 @@ blu-hawaii supports configuration with the following environment variables:
 
 You can also use a `.env` file. See [configuration.ts](src/configuration.ts) for all the details.
 
+## Installing
+
+You can install blu-hawaii from Dockerhub:
+
+```
+docker pull jliuhtonen/blu-hawaii:latest
+```
+
+Or with npm:
+
+```
+npm install -g blu-hawaii
+```
+
 ## Running
 
 On the first run, you need to approve the login in Last.fm UI, so blu-hawaii starts in "interactive mode" prompting you to make the approval.
