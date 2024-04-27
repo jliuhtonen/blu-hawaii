@@ -37,7 +37,7 @@ docker pull jliuhtonen/blu-hawaii:latest
 Or with npm:
 
 ```
-npm install -g blu-hawaii
+npm install -g @jliuhtonen/blu-hawaii
 ```
 
 ## Running
