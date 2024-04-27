@@ -2,7 +2,7 @@
   "name": "@jliuhtonen/blu-hawaii",
   "type": "module",
   "exports": "./dist/index.js",
-  "version": "1.1.3",
+  "version": "1.1.2",
   "description": "Scrobble music played on BluOS players to Last.fm",
   "scripts": {
     "lint": "prettier src --check",
@@ -11,7 +11,7 @@
     "start": "npm run build && node dist/index.js",
     "release-npm": "npm publish --access public",
     "release-docker": "docker buildx create --use && docker buildx build --platform linux/amd64,linux/arm64 -t docker.io/jliuhtonen/blu-hawaii:latest -t docker.io/jliuhtonen/blu-hawaii:$npm_package_version -f Containerfile . --push",
-    "release": "npm release-npm && npm release-docker"
+    "release": "npm run release-npm && npm run release-docker"
   },
   "author": "Janne Liuhtonen",
   "license": "MIT",
@@ -27,6 +27,6 @@
     "pino": "^8.20.0",
     "rxjs": "^7.5.2",
     "xml-js": "^1.6.11",
-    "zod": "^3.23.0"
+    "zod": "^3.11.6"
   }
 }
