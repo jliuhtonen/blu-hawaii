@@ -2,18 +2,18 @@ import { Observable, Subscription, filter, map } from "rxjs"
 import { Logger } from "pino"
 import { PlayingTrack, StatusQueryResponse } from "./bluOs/player.js"
 import { scrobbleTrack, updateNowPlaying } from "./submitTrack.js"
-import { LastFmConfig } from "./lastFm.js"
+import { LastFmApi } from "./lastFm.js"
 
 export interface ScrobblerDeps {
   logger: Logger
-  lastFmConfig: LastFmConfig
+  lastFm: LastFmApi
   sessionToken: string
   bluOsStatus: Observable<StatusQueryResponse>
 }
 
 export const createScrobbler = async ({
   bluOsStatus,
-  lastFmConfig,
+  lastFm,
   sessionToken,
   logger,
 }: ScrobblerDeps): Promise<Subscription> => {
@@ -23,12 +23,12 @@ export const createScrobbler = async ({
   )
 
   const updatedNowPlayingTrack = updateNowPlaying(
-    lastFmConfig,
+    lastFm,
     sessionToken,
     playingTrack,
   )
 
-  const scrobbledTrack = scrobbleTrack(lastFmConfig, sessionToken, playingTrack)
+  const scrobbledTrack = scrobbleTrack(lastFm, sessionToken, playingTrack)
 
   const subscriptions = updatedNowPlayingTrack.subscribe((response) => {
     switch (response.type) {

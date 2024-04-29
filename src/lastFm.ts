@@ -27,7 +27,20 @@ export interface LastFmTrack {
   duration?: number
 }
 
-export async function getAuthToken(apiKey: string): Promise<string> {
+export const createLastFmApi = (config: LastFmConfig) => ({
+  getAuthToken: () => getAuthToken(config.apiKey),
+  getSession: (authToken: string) => getSession(config, authToken),
+  createApproveApiClientUrl: (authToken: string) =>
+    createApproveApiClientUrl(config.apiKey, authToken),
+  scrobbleTrack: (sessionKey: string, track: LastFmTrack) =>
+    scrobbleTrack(config, sessionKey, track),
+  nowPlaying: (sessionKey: string, track: NowPlayingTrack) =>
+    nowPlaying(config, sessionKey, track),
+})
+
+export type LastFmApi = ReturnType<typeof createLastFmApi>
+
+async function getAuthToken(apiKey: string): Promise<string> {
   const searchParams = {
     method: "auth.gettoken",
     api_key: apiKey,
@@ -37,7 +50,7 @@ export async function getAuthToken(apiKey: string): Promise<string> {
   return tokenResponse.parse(response).token
 }
 
-export async function getSession(
+async function getSession(
   config: LastFmConfig,
   authToken: string,
 ): Promise<string> {
@@ -58,10 +71,7 @@ export async function getSession(
   return parsedSession.session.key
 }
 
-export function createApproveApiClientUrl(
-  apiKey: string,
-  authToken: string,
-): string {
+function createApproveApiClientUrl(apiKey: string, authToken: string): string {
   const searchParams = new URLSearchParams({
     api_key: apiKey,
     token: authToken,
@@ -70,7 +80,7 @@ export function createApproveApiClientUrl(
   return `https://www.last.fm/api/auth/?${searchParams.toString()}`
 }
 
-export async function scrobbleTrack(
+async function scrobbleTrack(
   config: LastFmConfig,
   sessionKey: string,
   track: LastFmTrack,
@@ -112,7 +122,7 @@ export interface NowPlayingTrack {
   album?: string
 }
 
-export async function nowPlaying(
+async function nowPlaying(
   config: LastFmConfig,
   sessionKey: string,
   track: NowPlayingTrack,

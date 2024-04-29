@@ -1,18 +1,18 @@
 import * as fs from "node:fs/promises"
-import * as lastFm from "./lastFm.js"
+import { LastFmApi } from "./lastFm.js"
 import * as readline from "node:readline"
 
 const rl = readline.createInterface(process.stdin, process.stdout)
 
 export async function obtainSessionToken(
   sessionFilePath: string,
-  lastFmConfig: lastFm.LastFmConfig,
+  lastFm: LastFmApi,
 ): Promise<string | undefined> {
   const persistedSession = await loadSessionToken(sessionFilePath)
   if (persistedSession !== undefined) {
     return persistedSession
   } else {
-    const sessionToken = await createNewSession(lastFmConfig)
+    const sessionToken = await createNewSession(lastFm)
     if (sessionToken !== undefined) {
       await persistSessionToken(sessionFilePath, sessionToken)
     }
@@ -21,19 +21,18 @@ export async function obtainSessionToken(
 }
 
 async function createNewSession(
-  lastFmConfig: lastFm.LastFmConfig,
+  lastFm: LastFmApi,
 ): Promise<string | undefined> {
-  const authToken = await lastFm.getAuthToken(lastFmConfig.apiKey)
+  const authToken = await lastFm.getAuthToken()
   const answer = await question(
     `Please approve the Last.fm API client at ${lastFm.createApproveApiClientUrl(
-      lastFmConfig.apiKey,
       authToken,
     )}\n Then type 'yes' followed by return to continue: `,
   )
   if (answer !== "yes") {
     return undefined
   } else {
-    return await lastFm.getSession(lastFmConfig, authToken)
+    return await lastFm.getSession(authToken)
   }
 }
 

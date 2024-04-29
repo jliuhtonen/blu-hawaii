@@ -9,6 +9,7 @@ import {
 } from "./bluOs/player.js"
 import { pino } from "pino"
 import { Observable } from "rxjs"
+import { createLastFmApi } from "./lastFm.js"
 
 const config = parseConfiguration(process.env)
 
@@ -30,10 +31,8 @@ const createApp = async (config: Configuration) => {
     logger: logger.child({ component: "lastFm" }),
   }
 
-  const sessionToken = await obtainSessionToken(
-    config.session.filePath,
-    lastFmConfig,
-  )
+  const lastFm = createLastFmApi(lastFmConfig)
+  const sessionToken = await obtainSessionToken(config.session.filePath, lastFm)
 
   if (!sessionToken) {
     logger.error({ error: "Unable to obtain session!" })
@@ -47,7 +46,7 @@ const createApp = async (config: Configuration) => {
       })
     : createDiscoveredPlayersStatusObservable(logger)
 
-  return createScrobbler({ bluOsStatus, lastFmConfig, sessionToken, logger })
+  return createScrobbler({ bluOsStatus, lastFm, sessionToken, logger })
 }
 
 const subscriptions = await createApp(config)
