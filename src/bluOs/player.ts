@@ -1,5 +1,5 @@
 import ky from "ky"
-import { map, Observable, share, switchMap, tap } from "rxjs"
+import { map, merge, mergeMap, Observable, share, switchMap, tap } from "rxjs"
 import { xml2js } from "xml-js"
 import * as zod from "zod"
 import { Logger } from "pino"
@@ -9,6 +9,7 @@ import {
   cachePlayerEtag,
   evictPlayerEtag,
 } from "./etagCache.js"
+import { discoverPlayersObservable, Player } from "./serviceDiscovery.js"
 
 export interface BluOsConfig {
   ip: string
@@ -26,6 +27,25 @@ export type PlayingTrack = zod.infer<typeof xmlJsStatus>
 const longPollTimeoutSecs = 100
 const httpRequestTimeoutMillis = longPollTimeoutSecs * 1000 + 2
 const trackPlayingStates = ["play", "stream"]
+
+export const createDiscoveredPlayersStatusObservable = (
+  logger: Logger,
+): Observable<StatusQueryResponse> => {
+  return discoverPlayersObservable().pipe(
+    tap((players: Player[]) => logger.debug({ players }, "Discovered players")),
+    mergeMap((players: Player[]) =>
+      merge(
+        ...players.map((p) =>
+          createBluOsStatusObservable({
+            ...p,
+            logger: logger.child({ component: "bluOS" }),
+          }),
+        ),
+      ),
+    ),
+    share(),
+  )
+}
 
 export function createBluOsStatusObservable({
   ip,
