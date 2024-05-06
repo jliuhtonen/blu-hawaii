@@ -49,7 +49,7 @@ Please approve the Last.fm API client at https://www.last.fm/api/auth/?api_key=x
 Then type 'yes' followed by return to continue:
 ```
 
-Follow the instructions. On subsequent runs blu-hawaii can run unattended unless access is revoked from Last.fm or the session file gets removed.
+Copy the url provided and paste into your browser to approve. Then return to the shell session and enter 'yes', as instructed. On subsequent runs blu-hawaii can run unattended unless access is revoked from Last.fm or the session file gets removed.
 
 So if you are running the process inside a container, for example, it is a good idea to run the container in an interactive mode on the first run.
 
