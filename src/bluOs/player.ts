@@ -1,9 +1,18 @@
 import ky from "ky"
-import { map, merge, mergeMap, Observable, share, switchMap, tap } from "rxjs"
+import {
+  defer,
+  map,
+  merge,
+  mergeMap,
+  Observable,
+  retry,
+  share,
+  switchMap,
+  tap,
+} from "rxjs"
 import { xml2js } from "xml-js"
 import * as zod from "zod"
 import { Logger } from "pino"
-import { asRetryable } from "../requestUtil.js"
 import {
   cachedPlayerEtag,
   cachePlayerEtag,
@@ -132,7 +141,9 @@ export const createBluOsStatusObservable = ({
 
   const bluOsStatus = cachedPlayerEtag(ip).pipe(
     switchMap((etag) =>
-      asRetryable(() => fetchBluOsStatus(logger, statusUrl, etag)),
+      defer(() => fetchBluOsStatus(logger, statusUrl, etag)).pipe(
+        retry({ delay: 10000 }),
+      ),
     ),
     map((r) => parseBluOsStatus(r)),
     tap((status: StatusQueryResponse) => {
