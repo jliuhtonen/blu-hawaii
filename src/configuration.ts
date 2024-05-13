@@ -1,5 +1,27 @@
 import { z } from "zod"
 
+type LoggingDestination =
+  | {
+      type: "stdout"
+    }
+  | {
+      type: "file"
+      path: string
+    }
+
+const stringToLoggingDestination = (str: string): LoggingDestination => {
+  if (str === "stdout") {
+    return {
+      type: "stdout",
+    }
+  } else {
+    return {
+      type: "file",
+      path: str,
+    }
+  }
+}
+
 const configuration = z.object({
   log: z.object({
     level: z.string().default("info"),
@@ -22,9 +44,9 @@ const configuration = z.object({
 
 export type Configuration = z.infer<typeof configuration>
 
-export function parseConfiguration(
+export const parseConfiguration = (
   source: Partial<Record<string, string>>,
-): Configuration {
+): Configuration => {
   return configuration.parse({
     log: {
       level: source["LOG_LEVEL"],
@@ -45,26 +67,4 @@ export function parseConfiguration(
       filePath: source["SESSION_FILE_PATH"],
     },
   })
-}
-
-type LoggingDestination =
-  | {
-      type: "stdout"
-    }
-  | {
-      type: "file"
-      path: string
-    }
-
-function stringToLoggingDestination(str: string): LoggingDestination {
-  if (str === "stdout") {
-    return {
-      type: "stdout",
-    }
-  } else {
-    return {
-      type: "file",
-      path: str,
-    }
-  }
 }

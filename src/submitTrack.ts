@@ -16,7 +16,7 @@ import {
   isTrackPlaying,
   PlayingTrack,
 } from "./bluOs/player.js"
-import * as lastFm from "./lastFm.js"
+import { LastFmApi, NowPlayingResponse, ScrobblesResponse } from "./lastFm.js"
 import { MaybeUnknown } from "./util.js"
 
 const scrobbleThreshold = 0.5
@@ -25,22 +25,23 @@ type SubmitResult<A> =
   | { type: "success"; result: A }
   | { type: "error"; error: Error; message: string }
 
-type UpdateNowPlayingResult = SubmitResult<
-  MaybeUnknown<lastFm.NowPlayingResponse>
->
+type UpdateNowPlayingResult = SubmitResult<MaybeUnknown<NowPlayingResponse>>
 
-type SubmitScrobbleResult = SubmitResult<MaybeUnknown<lastFm.ScrobblesResponse>>
+type SubmitScrobbleResult = SubmitResult<MaybeUnknown<ScrobblesResponse>>
 
-export function updateNowPlaying(
-  lastFmConfig: lastFm.LastFmConfig,
+const shouldScrobble = (t: PlayingTrack) =>
+  isTrackPlaying(t) && hasPlayedOverThreshold(t, scrobbleThreshold)
+
+export const updateNowPlaying = (
+  lastFm: LastFmApi,
   sessionToken: string,
   playingTrack: Observable<PlayingTrack>,
-): Observable<UpdateNowPlayingResult> {
+): Observable<UpdateNowPlayingResult> => {
   return playingTrack.pipe(
     distinctUntilChanged(isSameTrack),
     mergeMap((t) =>
       from(
-        lastFm.nowPlaying(lastFmConfig, sessionToken, {
+        lastFm.nowPlaying(sessionToken, {
           artist: t.artist,
           album: t.album,
           track: t.title,
@@ -60,17 +61,17 @@ export function updateNowPlaying(
   )
 }
 
-export function scrobbleTrack(
-  lastFmConfig: lastFm.LastFmConfig,
+export const scrobbleTrack = (
+  lastFm: LastFmApi,
   sessionToken: string,
   playingTrack: Observable<PlayingTrack>,
-): Observable<SubmitScrobbleResult> {
+): Observable<SubmitScrobbleResult> => {
   return playingTrack.pipe(
     filter(shouldScrobble),
     distinctUntilChanged(isSameTrack),
     mergeMap((t) =>
       defer(() =>
-        lastFm.scrobbleTrack(lastFmConfig, sessionToken, {
+        lastFm.scrobbleTrack(sessionToken, {
           artist: t.artist,
           album: t.album,
           track: t.title,
@@ -91,8 +92,4 @@ export function scrobbleTrack(
       ),
     ),
   )
-}
-
-function shouldScrobble(t: PlayingTrack) {
-  return isTrackPlaying(t) && hasPlayedOverThreshold(t, scrobbleThreshold)
 }
