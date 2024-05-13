@@ -29,11 +29,14 @@ type UpdateNowPlayingResult = SubmitResult<MaybeUnknown<NowPlayingResponse>>
 
 type SubmitScrobbleResult = SubmitResult<MaybeUnknown<ScrobblesResponse>>
 
-export function updateNowPlaying(
+const shouldScrobble = (t: PlayingTrack) =>
+  isTrackPlaying(t) && hasPlayedOverThreshold(t, scrobbleThreshold)
+
+export const updateNowPlaying = (
   lastFm: LastFmApi,
   sessionToken: string,
   playingTrack: Observable<PlayingTrack>,
-): Observable<UpdateNowPlayingResult> {
+): Observable<UpdateNowPlayingResult> => {
   return playingTrack.pipe(
     distinctUntilChanged(isSameTrack),
     mergeMap((t) =>
@@ -58,11 +61,11 @@ export function updateNowPlaying(
   )
 }
 
-export function scrobbleTrack(
+export const scrobbleTrack = (
   lastFm: LastFmApi,
   sessionToken: string,
   playingTrack: Observable<PlayingTrack>,
-): Observable<SubmitScrobbleResult> {
+): Observable<SubmitScrobbleResult> => {
   return playingTrack.pipe(
     filter(shouldScrobble),
     distinctUntilChanged(isSameTrack),
@@ -89,8 +92,4 @@ export function scrobbleTrack(
       ),
     ),
   )
-}
-
-function shouldScrobble(t: PlayingTrack) {
-  return isTrackPlaying(t) && hasPlayedOverThreshold(t, scrobbleThreshold)
 }
