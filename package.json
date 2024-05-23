@@ -7,6 +7,7 @@
   "scripts": {
     "lint": "prettier src --check",
     "format": "prettier src --write",
+    "test": "node --import tsx --test ./test/*.test.ts",
     "build": "npm run format && npx tsc",
     "start": "npm run build && node dist/index.js",
     "release-npm": "npm publish --access public",
@@ -17,7 +18,11 @@
   "license": "MIT",
   "devDependencies": {
     "@types/node": "^20.12.7",
+    "nock": "^14.0.0-beta.6",
+    "pino-pretty": "^11.1.0",
     "prettier": "^3.2.5",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.11.0",
     "typescript": "^5.4.5"
   },
   "dependencies": {

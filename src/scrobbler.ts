@@ -1,22 +1,45 @@
-import { Observable, Subscription, filter, map } from "rxjs"
+import { Observable, filter, map } from "rxjs"
 import { Logger } from "pino"
-import { PlayingTrack, StatusQueryResponse } from "./bluOs/player.js"
-import { scrobbleTrack, updateNowPlaying } from "./submitTrack.js"
+import {
+  PlayingTrack,
+  StatusQueryResponse,
+  createBluOsStatusObservable,
+  createDiscoveredPlayersStatusObservable,
+} from "./bluOs/player.js"
+import {
+  SubmitScrobbleResult,
+  UpdateNowPlayingResult,
+  scrobbleTrack,
+  updateNowPlaying,
+} from "./submitTrack.js"
+import { Configuration } from "./configuration.js"
 import { LastFmApi } from "./lastFm.js"
 
 export interface ScrobblerDeps {
+  config: Configuration
   logger: Logger
   lastFm: LastFmApi
   sessionToken: string
-  bluOsStatus: Observable<StatusQueryResponse>
+}
+
+export interface ScrobblerOutput {
+  updatedNowPlayingTrack: Observable<UpdateNowPlayingResult>
+  scrobbledTrack: Observable<SubmitScrobbleResult>
 }
 
 export const createScrobbler = async ({
-  bluOsStatus,
+  config,
+  logger,
   lastFm,
   sessionToken,
-  logger,
-}: ScrobblerDeps): Promise<Subscription> => {
+}: ScrobblerDeps): Promise<ScrobblerOutput> => {
+  const bluOsStatus: Observable<StatusQueryResponse> = config.bluOs
+    ? createBluOsStatusObservable({
+        ...config.bluOs,
+        logger: logger.child({ component: "bluOS" }),
+      })
+    : createDiscoveredPlayersStatusObservable(logger)
+
   const playingTrack = bluOsStatus.pipe(
     map((s) => s.playingTrack),
     filter((t): t is PlayingTrack => t !== undefined),
@@ -30,29 +53,8 @@ export const createScrobbler = async ({
 
   const scrobbledTrack = scrobbleTrack(lastFm, sessionToken, playingTrack)
 
-  const subscriptions = updatedNowPlayingTrack.subscribe((response) => {
-    switch (response.type) {
-      case "error":
-        logger.error(response.error, response.message)
-        return
-      case "success":
-        logger.info(response.result.value, "Updated now playing track")
-        return
-    }
-  })
-
-  subscriptions.add(
-    scrobbledTrack.subscribe((response) => {
-      switch (response.type) {
-        case "error":
-          logger.error(response.error, response.message)
-          return
-        case "success":
-          logger.info(response.result.value, "Scrobbled track")
-          return
-      }
-    }),
-  )
-
-  return subscriptions
+  return {
+    updatedNowPlayingTrack,
+    scrobbledTrack,
+  }
 }
