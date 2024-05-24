@@ -1,6 +1,7 @@
 import ky from "ky"
 import {
   defer,
+  finalize,
   map,
   merge,
   mergeMap,
@@ -85,6 +86,7 @@ const fetchBluOsStatus = (
   logger: Logger,
   statusUrl: string,
   etag: string | undefined,
+  abortSignal: AbortSignal,
 ): Promise<string> => {
   logger.debug(`Calling BluOS status API with etag ${etag}`)
   const queryObj = {
@@ -96,6 +98,7 @@ const fetchBluOsStatus = (
     .get(statusUrl, {
       searchParams: new URLSearchParams(queryObj),
       timeout: httpRequestTimeoutMillis,
+      signal: abortSignal,
     })
     .text()
 }
@@ -140,11 +143,17 @@ export const createBluOsStatusObservable = ({
   const statusUrl = `http://${ip}:${port}/Status`
 
   const bluOsStatus = cachedPlayerEtag(ip).pipe(
-    switchMap((etag) =>
-      defer(() => fetchBluOsStatus(logger, statusUrl, etag)).pipe(
+    switchMap((etag) => {
+      const abortController = new AbortController()
+      return defer(() =>
+        fetchBluOsStatus(logger, statusUrl, etag, abortController.signal),
+      ).pipe(
+        finalize(() => {
+          abortController.abort()
+        }),
         retry({ delay: 10000 }),
-      ),
-    ),
+      )
+    }),
     map((r) => parseBluOsStatus(r)),
     tap((status: StatusQueryResponse) => {
       logger.debug({ bluOsStatus: status })

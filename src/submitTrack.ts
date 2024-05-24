@@ -25,9 +25,10 @@ type SubmitResult<A> =
   | { type: "success"; result: A }
   | { type: "error"; error: Error; message: string }
 
-type UpdateNowPlayingResult = SubmitResult<MaybeUnknown<NowPlayingResponse>>
-
-type SubmitScrobbleResult = SubmitResult<MaybeUnknown<ScrobblesResponse>>
+export type UpdateNowPlayingResult = SubmitResult<
+  MaybeUnknown<NowPlayingResponse>
+>
+export type SubmitScrobbleResult = SubmitResult<MaybeUnknown<ScrobblesResponse>>
 
 const shouldScrobble = (t: PlayingTrack) =>
   isTrackPlaying(t) && hasPlayedOverThreshold(t, scrobbleThreshold)
