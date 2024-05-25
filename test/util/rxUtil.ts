@@ -6,28 +6,48 @@ export const gatherObservableResults = <T>(
   timeout = 5000,
 ): Promise<T[]> => {
   return new Promise((resolve, reject) => {
+    let timeoutRef: NodeJS.Timeout | undefined
     const results: T[] = []
+
+    const onComplete = () => {
+      if (timeoutRef) {
+        clearTimeout(timeoutRef)
+      }
+      resolve(results)
+    }
+
+    const onError = (error: Error) => {
+      if (timeoutRef) {
+        clearTimeout(timeoutRef)
+      }
+      reject(error)
+    }
+
     const subscription = observable.subscribe({
       next(result: T) {
         results.push(result)
         if (results.length === numberOfResults) {
           subscription.unsubscribe()
-          resolve(results)
+          onComplete()
         }
       },
       error(error: Error) {
         subscription.unsubscribe()
-        reject(error)
+        onError(error)
       },
       complete() {
         subscription.unsubscribe()
-        resolve(results)
+        onComplete()
       },
     })
 
-    setTimeout(() => {
+    timeoutRef = setTimeout(() => {
       subscription.unsubscribe()
-      resolve(results)
+      reject(
+        new Error(
+          `Timeout after ${timeout} milliseconds waiting for observable results`,
+        ),
+      )
     }, timeout)
   })
 }
