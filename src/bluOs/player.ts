@@ -17,6 +17,7 @@ import { Logger } from "pino"
 import {
   cachedPlayerEtag,
   cachePlayerEtag,
+  createEtagCache,
   evictPlayerEtag,
 } from "./etagCache.js"
 import { discoverPlayersObservable, Player } from "./serviceDiscovery.js"
@@ -141,8 +142,9 @@ export const createBluOsStatusObservable = ({
   logger,
 }: BluOsConfig): Observable<StatusQueryResponse> => {
   const statusUrl = `http://${ip}:${port}/Status`
+  const etagCache = createEtagCache()
 
-  const bluOsStatus = cachedPlayerEtag(ip).pipe(
+  const bluOsStatus = etagCache.cachedPlayerEtag(ip).pipe(
     switchMap((etag) => {
       const abortController = new AbortController()
       return defer(() =>
@@ -158,9 +160,9 @@ export const createBluOsStatusObservable = ({
     tap((status: StatusQueryResponse) => {
       logger.debug({ bluOsStatus: status })
       if (status !== undefined) {
-        cachePlayerEtag(ip, status.etag)
+        etagCache.cachePlayerEtag(ip, status.etag)
       } else {
-        evictPlayerEtag(ip)
+        etagCache.evictPlayerEtag(ip)
       }
     }),
     share(),
