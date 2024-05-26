@@ -5,6 +5,7 @@ export const trackPlayingResponse = ({
   secs,
   totalLength,
   state,
+  etag,
 }: {
   artist: string
   album: string
@@ -12,10 +13,11 @@ export const trackPlayingResponse = ({
   secs: number
   totalLength: number
   state: string
+  etag: string
 }): string =>
   `
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<status etag="20fde707e2572e25e062964520297dcc">
+<status etag="${etag}">
 <actions>
   <action name="back" url="/Action?service=TidalConnect&amp;action=Previous" />
   <action name="skip" url="/Action?service=TidalConnect&amp;action=Next" />

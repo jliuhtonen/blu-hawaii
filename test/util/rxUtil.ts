@@ -1,8 +1,9 @@
 import { Observable } from "rxjs"
+import assert from "node:assert"
 
-export const gatherObservableResults = <T>(
+export const assertObservableResults = <T>(
   observable: Observable<T>,
-  numberOfResults: number,
+  expectedResults: T[],
   timeout = 5000,
 ): Promise<T[]> => {
   return new Promise((resolve, reject) => {
@@ -26,9 +27,15 @@ export const gatherObservableResults = <T>(
     const subscription = observable.subscribe({
       next(result: T) {
         results.push(result)
-        if (results.length === numberOfResults) {
+        if (results.length < expectedResults.length) {
+          return
+        }
+        try {
+          assert.deepEqual(expectedResults, results)
           subscription.unsubscribe()
           onComplete()
+        } catch (error) {
+          onError(error)
         }
       },
       error(error: Error) {
