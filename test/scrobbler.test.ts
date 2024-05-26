@@ -70,7 +70,10 @@ describe("Scrobbler", () => {
         }),
       )
     nock("https://ws.audioscrobbler.com")
-      .post("/2.0")
+      .post(
+        "/2.0",
+        "artist=R%C3%A4tt%C3%B6+ja+Lehtisalo&album=Valon+nopeus&track=Valonnopeus&method=track.updateNowPlaying&api_key=api-key&sk=SESSIONTOKEN&api_sig=8830930383e3f16ccdf242330b1bd5b8&format=json",
+      )
       .matchHeader("content-type", "application/x-www-form-urlencoded")
       .matchHeader("accept", "application/json")
       .reply(200, {
