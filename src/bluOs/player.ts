@@ -14,12 +14,7 @@ import {
 import { xml2js } from "xml-js"
 import * as zod from "zod"
 import { Logger } from "pino"
-import {
-  cachedPlayerEtag,
-  cachePlayerEtag,
-  createEtagCache,
-  evictPlayerEtag,
-} from "./etagCache.js"
+import { createEtagCache } from "./etagCache.js"
 import { discoverPlayersObservable, Player } from "./serviceDiscovery.js"
 
 const xmlTextField = zod.object({
