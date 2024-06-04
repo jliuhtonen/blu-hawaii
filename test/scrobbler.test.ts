@@ -5,7 +5,6 @@ import { createScrobbler } from "../src/scrobbler.js"
 import { Configuration } from "../src/configuration.js"
 import { pino } from "pino"
 import { createLastFmApi } from "../src/lastFm.js"
-import assert from "node:assert"
 import { assertObservableResults } from "./util/rxUtil.js"
 import { trackPlayingResponse } from "./util/bluOsUtil.js"
 
