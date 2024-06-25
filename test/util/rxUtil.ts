@@ -52,7 +52,7 @@ export const assertObservableResults = <T>(
       subscription.unsubscribe()
       reject(
         new Error(
-          `Timeout after ${timeout} milliseconds waiting for observable results`,
+          `Timeout after ${timeout} milliseconds waiting for observable results, got ${JSON.stringify(results, null, 2)}`,
         ),
       )
     }, timeout)
