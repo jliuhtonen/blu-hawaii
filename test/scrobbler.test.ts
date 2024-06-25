@@ -207,6 +207,132 @@ describe("Scrobbler", () => {
     ])
   })
 
+  it("should set now playing and scrobble a track after it has played over the threshold", async () => {
+    nock("http://10.0.0.10:11000")
+      .get("/Status")
+      .query({
+        timeout: "100",
+      })
+      .reply(
+        200,
+        trackPlayingResponse({
+          artist: "Convextion",
+          album: "R-CNVX2",
+          title: "Ebulience",
+          secs: 280,
+          totalLength: 558,
+          state: "stream",
+          etag: "etag31",
+        }),
+      )
+    nock("https://ws.audioscrobbler.com")
+      .post(
+        "/2.0",
+        "artist=Convextion&album=R-CNVX2&track=Ebulience&method=track.updateNowPlaying&api_key=api-key&sk=SESSIONTOKEN&api_sig=d1dfd4fc2b564ee91d7f2bb541e9bd48&format=json",
+      )
+      .matchHeader("content-type", "application/x-www-form-urlencoded")
+      .matchHeader("accept", "application/json")
+      .reply(200, {
+        nowplaying: {
+          artist: { corrected: "0", "#text": "Convextion" },
+          track: { corrected: "0", "#text": "Ebulience" },
+          ignoredMessage: { code: "0", "#text": "" },
+          albumArtist: { corrected: "0", "#text": "" },
+          album: { corrected: "0", "#text": "R-CNVX2" },
+        },
+      })
+    nock("https://ws.audioscrobbler.com")
+      .post(
+        "/2.0",
+        /^artist=Convextion&album=R\-CNVX2&track=Ebulience&duration=558&timestamp=\d+&method=track\.scrobble&api_key=api\-key&sk=SESSIONTOKEN&api_sig=\w+&format=json$/,
+      )
+      .matchHeader("content-type", "application/x-www-form-urlencoded")
+      .matchHeader("accept", "application/json")
+      .reply(200, {
+        scrobbles: {
+          scrobble: {
+            artist: { corrected: "0", "#text": "Convextion" },
+            track: { corrected: "0", "#text": "Ebulience" },
+            ignoredMessage: { code: "0", "#text": "" },
+            albumArtist: { corrected: "0", "#text": "" },
+            album: { corrected: "0", "#text": "R-CNVX2" },
+          },
+        },
+      })
+    const { scrobbledTrack, updatedNowPlayingTrack } =
+      await createTestScrobbler()
+    await Promise.all([
+      assertObservableResults(updatedNowPlayingTrack, [
+        {
+          type: "success",
+          result: {
+            type: "known",
+            value: {
+              nowplaying: {
+                artist: {
+                  value: "Convextion",
+                  corrected: false,
+                },
+                album: {
+                  value: "R-CNVX2",
+                  corrected: false,
+                },
+                albumArtist: {
+                  value: "",
+                  corrected: false,
+                },
+                track: {
+                  value: "Ebulience",
+                  corrected: false,
+                },
+                ignoredMessage: {
+                  code: "0",
+                  value: "",
+                },
+              },
+            },
+          },
+        },
+      ]),
+      assertObservableResults(scrobbledTrack, [
+        {
+          type: "success",
+          result: {
+            type: "known",
+            value: {
+              scrobbles: [
+                {
+                  scrobble: {
+                    artist: {
+                      value: "Convextion",
+                      corrected: false,
+                    },
+                    album: {
+                      value: "R-CNVX2",
+                      corrected: false,
+                    },
+                    albumArtist: {
+                      value: "",
+                      corrected: false,
+                    },
+                    track: {
+                      value: "Ebulience",
+                      corrected: false,
+                    },
+                    ignoredMessage: {
+                      code: "0",
+                      value: "",
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        },
+      ]),
+    ])
+  })
+
   afterEach(() => {
     nock.cleanAll()
   })
