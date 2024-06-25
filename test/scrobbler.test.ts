@@ -138,6 +138,24 @@ describe("Scrobbler", () => {
           etag: "etag21",
         }),
       )
+    nock("http://10.0.0.10:11000")
+      .get("/Status")
+      .query({
+        timeout: "100",
+        etag: "etag21",
+      })
+      .reply(
+        200,
+        trackPlayingResponse({
+          artist: "Convextion",
+          album: "R-CNVX2",
+          title: "Ebulience",
+          secs: 120,
+          totalLength: 558,
+          state: "stream",
+          etag: "etag22",
+        }),
+      )
     nock("https://ws.audioscrobbler.com")
       .post(
         "/2.0",
