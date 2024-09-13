@@ -1,12 +1,4 @@
-export const trackPlayingResponse = ({
-  artist,
-  album,
-  title,
-  secs,
-  totalLength,
-  state,
-  etag,
-}: {
+interface TrackData {
   artist: string
   album: string
   title: string
@@ -14,7 +6,17 @@ export const trackPlayingResponse = ({
   totalLength: number
   state: string
   etag: string
-}): string =>
+}
+
+export const trackStreamingResponse = ({
+  artist,
+  album,
+  title,
+  secs,
+  totalLength,
+  state,
+  etag,
+}: TrackData): string =>
   `
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <status etag="${etag}">
@@ -61,3 +63,50 @@ export const trackPlayingResponse = ({
 <secs>${secs}</secs>
 </status>
 `.trim()
+
+export const trackRadioResponse: string = `
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<status etag="d5748f55e3f800561066f5fd7d0529de">
+<actions>
+  <action name="back" />
+  <action name="skip" url="/Action?service=RadioParadise&amp;next=2628777" />
+</actions>
+<album>Embers</album>
+<artist>God Is an Astronaut</artist>
+<canMovePlayback>true</canMovePlayback>
+<canSeek>0</canSeek>
+<currentImage>https://img.radioparadise.com/covers/l/19378_7f640f4e-225d-4ed2-8da2-afe623969211.jpg</currentImage>
+<cursor>7</cursor>
+<db>-100</db>
+<image>https://img.radioparadise.com/covers/l/19378_7f640f4e-225d-4ed2-8da2-afe623969211.jpg</image>
+<indexing>0</indexing>
+<infourl>https://en.wikipedia.org/wiki/God_Is_an_Astronaut</infourl>
+<inputId>RadioParadise</inputId>
+<mid>31</mid>
+<mode>1</mode>
+<mqaOFS>44100</mqaOFS>
+<mute>0</mute>
+<pid>33</pid>
+<prid>1</prid>
+<quality>mqa</quality>
+<repeat>2</repeat>
+<schemaVersion>34</schemaVersion>
+<service>RadioParadise</service>
+<serviceIcon>/Sources/images/RadioParadiseIcon.png</serviceIcon>
+<serviceName>Radio Paradise</serviceName>
+<shuffle>0</shuffle>
+<sid>6</sid>
+<sleep></sleep>
+<song>0</song>
+<state>stream</state>
+<stationImage>https://img.radioparadise.com/source/27/channel_logo/chan_0.png</stationImage>
+<streamFormat>16/44.1</streamFormat>
+<streamUrl>RadioParadise:/0:20</streamUrl>
+<syncStat>272</syncStat>
+<title1>RP Main Mix</title1>
+<title2>Heart of Roots</title2>
+<title3>God Is an Astronaut • Embers</title3>
+<volume>0</volume>
+<secs>45</secs>
+</status>
+  `

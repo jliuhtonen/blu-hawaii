@@ -76,7 +76,7 @@ export const scrobbleTrack = (
           artist: t.artist,
           album: t.album,
           track: t.title,
-          duration: t.totalLength,
+          ...(!!t.totalLength && { duration: t.totalLength }),
           timestamp: Math.floor(Date.now() / 1000),
         }),
       ).pipe(
