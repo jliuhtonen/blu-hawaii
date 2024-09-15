@@ -6,7 +6,11 @@ import { Configuration } from "../src/configuration.js"
 import { pino } from "pino"
 import { createLastFmApi } from "../src/lastFm.js"
 import { assertObservableResults } from "./util/rxUtil.js"
-import { trackRadioResponse, trackStreamingResponse } from "./util/bluOsUtil.js"
+import {
+  trackPandoraRadioResponse,
+  trackRadioResponse,
+  trackStreamingResponse,
+} from "./util/bluOsUtil.js"
 
 const createTestScrobbler = () => {
   const config: Configuration = {
@@ -165,6 +169,64 @@ describe("Scrobbler", () => {
               },
               track: {
                 value: "Heart of Roots",
+                corrected: false,
+              },
+              ignoredMessage: {
+                code: "0",
+                value: "",
+              },
+            },
+          },
+        },
+      },
+    ])
+  })
+
+  it("should properly parse Pandora track", async () => {
+    nock("http://10.0.0.10:11000")
+      .get("/Status")
+      .query({
+        timeout: "100",
+      })
+      .reply(200, trackPandoraRadioResponse)
+    nock("https://ws.audioscrobbler.com")
+      .post(
+        "/2.0",
+        "artist=Shaman%27s+Dream&album=Prana+Pulse&track=Nectar&method=track.updateNowPlaying&api_key=api-key&sk=SESSIONTOKEN&api_sig=918c64bf709b5cce947be0f16f9b001e&format=json",
+      )
+      .matchHeader("content-type", "application/x-www-form-urlencoded")
+      .matchHeader("accept", "application/json")
+      .reply(200, {
+        nowplaying: {
+          artist: { corrected: "0", "#text": "Shaman's Dream" },
+          track: { corrected: "0", "#text": "Nectar" },
+          ignoredMessage: { code: "0", "#text": "" },
+          albumArtist: { corrected: "0", "#text": "" },
+          album: { corrected: "0", "#text": "Prana Pulse" },
+        },
+      })
+    const { updatedNowPlayingTrack } = await createTestScrobbler()
+    await assertObservableResults(updatedNowPlayingTrack, [
+      {
+        type: "success",
+        result: {
+          type: "known",
+          value: {
+            nowplaying: {
+              artist: {
+                value: "Shaman's Dream",
+                corrected: false,
+              },
+              album: {
+                value: "Prana Pulse",
+                corrected: false,
+              },
+              albumArtist: {
+                value: "",
+                corrected: false,
+              },
+              track: {
+                value: "Nectar",
                 corrected: false,
               },
               ignoredMessage: {

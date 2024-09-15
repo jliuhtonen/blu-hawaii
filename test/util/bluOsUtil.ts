@@ -110,3 +110,53 @@ export const trackRadioResponse: string = `
 <secs>45</secs>
 </status>
   `
+
+export const trackPandoraRadioResponse: string = `
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<status etag="8140fd864cae756060b386cafe4e4258">
+<actions>
+  <action hide="1" name="back" />
+  <action name="skip" url="/Action?service=Pandora&amp;skip=TR%3A2166321" />
+  <action icon="/images/loveban/love.png" name="love" notification="Pandora will play more tracks with similar music qualities." state="-1" text="Love" type="thumbs" url="/Action?service=Pandora&amp;love=TR%3A2166321" />
+  <action icon="/images/loveban/ban.png" name="ban" notification="This track won't play on this station." state="-1" text="Ban" type="thumbs" url="/Action?service=Pandora&amp;ban=TR%3A2166321" />
+</actions>
+<album>Prana Pulse</album>
+<albumid>AL:191326</albumid>
+<artist>Shaman's Dream</artist>
+<artistid>AR:213207</artistid>
+<canMovePlayback>true</canMovePlayback>
+<currentImage>https://content-images.p-cdn.com/images/11/92/78/b5/01bd4f0bbf2e3324fe8a6577/_640W_640H.jpg</currentImage>
+<cursor>0</cursor>
+<db>-28.5</db>
+<image>https://content-images.p-cdn.com/images/11/92/78/b5/01bd4f0bbf2e3324fe8a6577/_640W_640H.jpg</image>
+<indexing>0</indexing>
+<mid>15</mid>
+<mode>1</mode>
+<mute>0</mute>
+<pid>10</pid>
+<prid>0</prid>
+<quality>191000</quality>
+<repeat>0</repeat>
+<schemaVersion>34</schemaVersion>
+<service>Pandora</service>
+<serviceIcon>/Sources/images/PandoraIcon.png</serviceIcon>
+<serviceName>Pandora</serviceName>
+<shuffle>0</shuffle>
+<sid>140</sid>
+<similarstationid>Pandora:radio:SF:16722:213207</similarstationid>
+<sleep></sleep>
+<song>0</song>
+<state>stream</state>
+<stationImage>https://content-images.p-cdn.com/images/3f/bd/73/31/cd7f42cba6358625dd80d56a/_500W_500H.jpg</stationImage>
+<streamFormat>MP3 191 kb/s</streamFormat>
+<streamUrl>Pandora:radio:ST:0:138214111317067420</streamUrl>
+<syncStat>190</syncStat>
+<title1>Shaman's Dream Radio</title1>
+<title2>Nectar</title2>
+<title3>Shaman's Dream • Prana Pulse</title3>
+<totlen>445</totlen>
+<trackstationid>Pandora:radio:SF:21586:2166321</trackstationid>
+<volume>36</volume>
+<secs>183</secs>
+</status>
+`
