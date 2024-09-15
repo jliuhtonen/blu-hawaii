@@ -88,7 +88,7 @@ export const isTrackPlaying = (t: PlayingTrack) =>
   trackPlayingStates.includes(t.state)
 
 export const isSameTrack = (a: PlayingTrack, b: PlayingTrack): boolean =>
-  a.title === b.title && a.album === b.album && a.title === b.title
+  a.title === b.title && a.album === b.album && a.artist === b.artist
 
 export const hasPlayedOverThreshold = (t: PlayingTrack, threshold: number) =>
   t.secs / longPollTimeoutSecs >=
