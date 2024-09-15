@@ -36,18 +36,24 @@ const xmlJsStatus = zod
     status: zod.object({
       artist: xmlTextField,
       album: xmlTextField,
+      name: xmlTextField.optional(),
       title1: xmlTextField,
+      title2: xmlTextField,
+      title3: xmlTextField,
       secs: xmlTextField,
-      totlen: xmlTextField,
+      totlen: xmlTextField.optional(),
       state: xmlTextField,
     }),
   })
   .transform((value) => ({
     artist: value.status.artist._text,
     album: value.status.album._text,
-    title: value.status.title1._text,
+    name: value.status.name?._text,
+    title1: value.status.title1._text,
+    title2: value.status.title2._text,
+    title3: value.status.title3._text,
     secs: Number(value.status.secs._text),
-    totalLength: Number(value.status.totlen._text),
+    totalLength: value.status.totlen && Number(value.status.totlen._text),
     state: value.status.state._text,
   }))
 
@@ -62,21 +68,31 @@ export interface StatusQueryResponse {
   playingTrack?: PlayingTrack
 }
 
-export type PlayingTrack = zod.infer<typeof xmlJsStatus>
+export type PlayingBluOsTrack = zod.infer<typeof xmlJsStatus>
+
+export type PlayingTrack = {
+  artist: string
+  album: string
+  title: string
+  secs: number
+  totalLength: number | undefined
+  state: string
+}
 
 const longPollTimeoutSecs = 100
 const httpRequestTimeoutMillis = longPollTimeoutSecs * 1000 + 2
 const trackPlayingStates = ["play", "stream"]
+const fallbackTrackLength = 90
 
 export const isTrackPlaying = (t: PlayingTrack) =>
   trackPlayingStates.includes(t.state)
 
 export const isSameTrack = (a: PlayingTrack, b: PlayingTrack): boolean =>
-  a.title === b.title && a.album === b.album && a.title === b.title
+  a.title === b.title && a.album === b.album && a.artist === b.artist
 
 export const hasPlayedOverThreshold = (t: PlayingTrack, threshold: number) =>
   t.secs / longPollTimeoutSecs >=
-  (t.totalLength / longPollTimeoutSecs) * threshold
+  ((t.totalLength ?? fallbackTrackLength) / longPollTimeoutSecs) * threshold
 
 const fetchBluOsStatus = (
   logger: Logger,
@@ -99,6 +115,20 @@ const fetchBluOsStatus = (
     .text()
 }
 
+/**
+ * When playing from a file, the BluOS API returns the track name in the `name` field.
+ * When playing from a streaming service, the BluOS API returns the track name in the `title1` field.
+ * When playing from certain network radios, the BluOS API returns the track name in the `title2` field, like so
+ * ```
+ * <title1>Radio Stream</title1>
+ * <title2>Title</title2>
+ * <title3>Artist • Album</title3>
+ * ```
+ **/
+const resolveTrackName = (t: PlayingBluOsTrack): string =>
+  t.name ??
+  (t.artist === t.title2 && t.album === t.title3 ? t.title1 : t.title2)
+
 const parseBluOsStatus = (bluOsXml: string): StatusQueryResponse => {
   const parsedJs = xml2js(bluOsXml, { compact: true })
 
@@ -106,7 +136,19 @@ const parseBluOsStatus = (bluOsXml: string): StatusQueryResponse => {
   const parsedData = xmlJsStatus.safeParse(parsedJs)
 
   if (parsedData.success) {
-    return { etag, playingTrack: parsedData.data }
+    const { artist, album, secs, totalLength, state } = parsedData.data
+    const title = resolveTrackName(parsedData.data)
+    return {
+      etag,
+      playingTrack: {
+        artist,
+        album,
+        title,
+        secs,
+        totalLength,
+        state,
+      },
+    }
   } else {
     return { etag }
   }
