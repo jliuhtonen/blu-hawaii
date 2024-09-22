@@ -50,11 +50,15 @@ export const assertObservableResults = <T>(
 
     timeoutRef = setTimeout(() => {
       subscription.unsubscribe()
-      reject(
-        new Error(
-          `Timeout after ${timeout} milliseconds waiting for observable results, got ${JSON.stringify(results, null, 2)}`,
-        ),
-      )
+      if (expectedResults.length === 0) {
+        onComplete()
+      } else {
+        reject(
+          new Error(
+            `Timeout after ${timeout} milliseconds waiting for observable results, got ${JSON.stringify(results, null, 2)}`,
+          ),
+        )
+      }
     }, timeout)
   })
 }
