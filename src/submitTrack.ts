@@ -39,6 +39,7 @@ export const updateNowPlaying = (
   playingTrack: Observable<PlayingTrack>,
 ): Observable<UpdateNowPlayingResult> => {
   return playingTrack.pipe(
+    filter(isTrackPlaying),
     distinctUntilChanged(isSameTrack),
     mergeMap((t) =>
       from(

@@ -124,6 +124,28 @@ describe("Scrobbler", () => {
     ])
   })
 
+  it("should update now playing track", async () => {
+    nock("http://10.0.0.10:11000")
+      .get("/Status")
+      .query({
+        timeout: "100",
+      })
+      .reply(
+        200,
+        trackStreamingResponse({
+          artist: "Rättö ja Lehtisalo",
+          album: "Valon nopeus",
+          title: "Valonnopeus",
+          secs: 10,
+          totalLength: 100,
+          state: "stopped",
+          etag: "etag11",
+        }),
+      )
+    const { updatedNowPlayingTrack } = await createTestScrobbler()
+    await assertObservableResults(updatedNowPlayingTrack, [], 200)
+  })
+
   it("should support radio style track properly", async () => {
     nock("http://10.0.0.10:11000")
       .get("/Status")
