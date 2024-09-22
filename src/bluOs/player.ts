@@ -2,6 +2,7 @@ import ky from "ky"
 import {
   defer,
   finalize,
+  from,
   map,
   merge,
   mergeMap,
@@ -183,15 +184,17 @@ export const createBluOsStatusObservable = ({
 
   const bluOsStatus = etagCache.cachedPlayerEtag(ip).pipe(
     switchMap((etag) => {
-      const abortController = new AbortController()
-      return defer(() =>
-        fetchBluOsStatus(logger, statusUrl, etag, abortController.signal),
-      ).pipe(
-        finalize(() => {
-          abortController.abort()
-        }),
-        retry({ delay: 10000 }),
-      )
+      return defer(() => {
+        const abortController = new AbortController()
+
+        return from(
+          fetchBluOsStatus(logger, statusUrl, etag, abortController.signal),
+        ).pipe(
+          finalize(() => {
+            abortController.abort()
+          }),
+        )
+      }).pipe(retry({ delay: 10000 }))
     }),
     map((r) => parseBluOsStatus(r)),
     tap((status: StatusQueryResponse) => {
