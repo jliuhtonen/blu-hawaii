@@ -16,7 +16,7 @@ import { xml2js } from "xml-js"
 import * as zod from "zod"
 import { Logger } from "pino"
 import { createEtagCache } from "./etagCache.js"
-import { discoverPlayersObservable, Player } from "./serviceDiscovery.js"
+import { Player } from "./serviceDiscovery.js"
 
 const xmlTextField = zod.object({
   _text: zod.string(),
@@ -155,26 +155,7 @@ const parseBluOsStatus = (bluOsXml: string): StatusQueryResponse => {
   }
 }
 
-export const createDiscoveredPlayersStatusObservable = (
-  logger: Logger,
-): Observable<StatusQueryResponse> => {
-  return discoverPlayersObservable().pipe(
-    tap((players: Player[]) => logger.debug({ players }, "Discovered players")),
-    mergeMap((players: Player[]) =>
-      merge(
-        ...players.map((p) =>
-          createBluOsStatusObservable({
-            ...p,
-            logger: logger.child({ component: "bluOS" }),
-          }),
-        ),
-      ),
-    ),
-    share(),
-  )
-}
-
-export const createBluOsStatusObservable = ({
+const createBluOsStatusObservable = ({
   ip,
   port,
   logger,
@@ -209,4 +190,24 @@ export const createBluOsStatusObservable = ({
   )
 
   return bluOsStatus
+}
+
+export const createPlayersStatusObservable = (
+  logger: Logger,
+  playersObservable: Observable<Player[]>,
+): Observable<StatusQueryResponse> => {
+  return playersObservable.pipe(
+    tap((players: Player[]) => logger.debug({ players }, "Discovered players")),
+    mergeMap((players: Player[]) =>
+      merge(
+        ...players.map((p) =>
+          createBluOsStatusObservable({
+            ...p,
+            logger: logger.child({ component: "bluOS" }),
+          }),
+        ),
+      ),
+    ),
+    share(),
+  )
 }
