@@ -73,15 +73,16 @@ export const scrobbleTrack = (
     distinctUntilChanged(isSameTrack),
     mergeMap((t) =>
       defer(() =>
-        lastFm.scrobbleTrack(sessionToken, {
-          artist: t.artist,
-          album: t.album,
-          track: t.title,
-          ...(!!t.totalLength && { duration: t.totalLength }),
-          timestamp: Math.floor(Date.now() / 1000),
-        }),
+        from(
+          lastFm.scrobbleTrack(sessionToken, {
+            artist: t.artist,
+            album: t.album,
+            track: t.title,
+            ...(!!t.totalLength && { duration: t.totalLength }),
+            timestamp: Math.floor(Date.now() / 1000),
+          }),
+        ).pipe(retry({ delay: 20000, count: 5 })),
       ).pipe(
-        retry({ delay: 20000, count: 5 }),
         map((result): SubmitScrobbleResult => ({ type: "success", result })),
         catchError(
           (e): Observable<SubmitScrobbleResult> =>

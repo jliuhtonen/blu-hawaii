@@ -40,6 +40,7 @@ const configuration = z.object({
   session: z.object({
     filePath: z.string().default(".blu-hawaii-session"),
   }),
+  debugMaxEventListeners: z.string().transform(Number).optional(),
 })
 
 export type Configuration = z.infer<typeof configuration>
@@ -66,5 +67,6 @@ export const parseConfiguration = (
     session: {
       filePath: source["SESSION_FILE_PATH"],
     },
+    debugMaxEventListeners: source["DEBUG_MAX_EVENT_LISTENERS"],
   })
 }

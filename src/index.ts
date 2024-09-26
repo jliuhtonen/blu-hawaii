@@ -1,8 +1,13 @@
 import "dotenv/config"
 import { parseConfiguration } from "./configuration.js"
 import { createApp } from "./app.js"
+import { EventEmitter } from "node:events"
 
 const config = parseConfiguration(process.env)
+
+if (config.debugMaxEventListeners) {
+  EventEmitter.defaultMaxListeners = config.debugMaxEventListeners
+}
 
 const subscriptions = await createApp(config)
 

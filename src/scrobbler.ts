@@ -1,10 +1,9 @@
-import { Observable, filter, map } from "rxjs"
+import { Observable, filter, map, of } from "rxjs"
 import { Logger } from "pino"
 import {
+  createPlayersStatusObservable,
   PlayingTrack,
   StatusQueryResponse,
-  createBluOsStatusObservable,
-  createDiscoveredPlayersStatusObservable,
 } from "./bluOs/player.js"
 import {
   SubmitScrobbleResult,
@@ -14,6 +13,7 @@ import {
 } from "./submitTrack.js"
 import { Configuration } from "./configuration.js"
 import { LastFmApi } from "./lastFm.js"
+import { discoverPlayersObservable } from "./bluOs/serviceDiscovery.js"
 
 export interface ScrobblerDeps {
   config: Configuration
@@ -33,12 +33,11 @@ export const createScrobbler = async ({
   lastFm,
   sessionToken,
 }: ScrobblerDeps): Promise<ScrobblerOutput> => {
-  const bluOsStatus: Observable<StatusQueryResponse> = config.bluOs
-    ? createBluOsStatusObservable({
-        ...config.bluOs,
-        logger: logger.child({ component: "bluOS" }),
-      })
-    : createDiscoveredPlayersStatusObservable(logger)
+  const playersObservable = config.bluOs
+    ? of([{ ...config.bluOs }])
+    : discoverPlayersObservable()
+  const bluOsStatus: Observable<StatusQueryResponse> =
+    createPlayersStatusObservable(logger, playersObservable)
 
   const playingTrack = bluOsStatus.pipe(
     map((s) => s.playingTrack),
