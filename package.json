@@ -5,6 +5,7 @@
   "version": "1.3.0",
   "description": "Scrobble music played on BluOS players to Last.fm",
   "scripts": {
+    "clean": "rm tsconfig.tsbuildinfo && rm -rf ./dist",
     "lint": "prettier src --check",
     "format": "prettier src --write",
     "test": "node --import tsx --test ./test/*.test.ts",
