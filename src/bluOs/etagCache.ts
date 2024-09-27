@@ -1,4 +1,4 @@
-import { BehaviorSubject, distinctUntilChanged, map } from "rxjs"
+import { BehaviorSubject, map } from "rxjs"
 import { omit } from "../util.js"
 
 export const createEtagCache = () => {
@@ -17,10 +17,7 @@ export const createEtagCache = () => {
   }
 
   const cachedPlayerEtag = (ip: string) =>
-    playerEtagsCache.pipe(
-      map((playerMap) => playerMap[ip]),
-      distinctUntilChanged(),
-    )
+    playerEtagsCache.pipe(map((playerMap) => playerMap[ip]))
 
   return {
     cachePlayerEtag,
