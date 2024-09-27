@@ -81,7 +81,7 @@ export type PlayingTrack = {
 }
 
 const longPollTimeoutSecs = 100
-const httpRequestTimeoutMillis = longPollTimeoutSecs * 1000 + 2
+const httpRequestTimeoutMillis = (longPollTimeoutSecs + 2) * 1000
 const trackPlayingStates = ["play", "stream"]
 const fallbackTrackLength = 90
 
