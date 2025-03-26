@@ -2,7 +2,7 @@ import { pino } from "pino"
 import { Configuration } from "./configuration.js"
 import { createLastFmApi } from "./lastFm.js"
 import { createScrobbler } from "./scrobbler.js"
-import { obtainSessionToken } from "./session.js"
+import { loadSessionToken } from "./session.js"
 
 export const createApp = async (config: Configuration) => {
   const logger = pino(
@@ -23,11 +23,12 @@ export const createApp = async (config: Configuration) => {
   }
 
   const lastFm = createLastFmApi(lastFmConfig)
-  const sessionToken = await obtainSessionToken(config.session.filePath, lastFm)
+  const sessionToken = await loadSessionToken(config.session.filePath)
 
   if (!sessionToken) {
-    logger.error({ error: "Unable to obtain session!" })
-    process.exit(1)
+    const errorMsg = "Unable to obtain session!"
+    logger.error({ error: errorMsg })
+    throw new Error(errorMsg)
   }
 
   const { updatedNowPlayingTrack, scrobbledTrack } = await createScrobbler({

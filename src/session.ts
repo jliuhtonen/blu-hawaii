@@ -17,20 +17,16 @@ const persistSessionToken = async (
   await fs.writeFile(sessionFilePath, token, { encoding: "utf8", mode: 0o600 })
 }
 
-export const obtainSessionToken = async (
+export const login = async (
   sessionFilePath: string,
   lastFm: LastFmApi,
-): Promise<string | undefined> => {
-  const persistedSession = await loadSessionToken(sessionFilePath)
-  if (persistedSession !== undefined) {
-    return persistedSession
-  } else {
-    const sessionToken = await createNewSession(lastFm)
-    if (sessionToken !== undefined) {
-      await persistSessionToken(sessionFilePath, sessionToken)
-    }
-    return sessionToken
+): Promise<boolean> => {
+  const sessionToken = await createNewSession(lastFm)
+  const isLoggedIn = sessionToken !== undefined
+  if (isLoggedIn) {
+    await persistSessionToken(sessionFilePath, sessionToken)
   }
+  return isLoggedIn
 }
 
 const createNewSession = async (
@@ -49,7 +45,7 @@ const createNewSession = async (
   }
 }
 
-const loadSessionToken = async (
+export const loadSessionToken = async (
   sessionFilePath: string,
 ): Promise<string | undefined> => {
   try {

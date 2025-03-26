@@ -25,7 +25,10 @@ const stringToLoggingDestination = (str: string): LoggingDestination => {
 const configuration = z.object({
   log: z.object({
     level: z.string().default("info"),
-    destination: z.string().transform(stringToLoggingDestination),
+    destination: z
+      .string()
+      .default("stdout")
+      .transform(stringToLoggingDestination),
   }),
   bluOs: z
     .object({
