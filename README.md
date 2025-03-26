@@ -42,7 +42,7 @@ npm install -g @jliuhtonen/blu-hawaii
 
 ## Running
 
-On the first run, you need to approve the login in Last.fm UI, so blu-hawaii starts in "interactive mode" prompting you to make the approval.
+On the first run, you need to approve the login in Last.fm UI. To start this process, run blu-hawaii with the command line argument "login". 
 
 ```
 Please approve the Last.fm API client at https://www.last.fm/api/auth/?api_key=xxx&token=yyy
