@@ -27,7 +27,7 @@
     "typescript": "^5.4.5"
   },
   "dependencies": {
-    "@jliuhtonen/nightvision": "^0.2.1",
+    "@jliuhtonen/nightvision": "^0.2.4",
     "dotenv": "^16.0.3",
     "ky": "^1.2.4",
     "pino": "^9.1.0",
