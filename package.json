@@ -6,11 +6,13 @@
     "types": "./dist/index.d.ts"
   },
   "types": "./dist/index.d.ts",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "bin": {
     "blu-hawaii": "./dist/index.js"
   },
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Scrobble music played on BluOS players to Last.fm",
   "scripts": {
     "clean": "rm tsconfig.tsbuildinfo && rm -rf ./dist",
