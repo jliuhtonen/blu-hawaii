@@ -19,6 +19,7 @@ import {
 } from "./bluOs/player.js"
 import { LastFmApi, NowPlayingResponse, ScrobblesResponse } from "./lastFm.js"
 import { MaybeUnknown } from "./util.js"
+import { Logger } from "pino"
 
 const scrobbleThreshold = 0.5
 
@@ -43,6 +44,7 @@ const shouldScrobble = (t: PlayingTrack) =>
 const shouldUpdateNowPlaying = (t: PlayingTrack) => isTrackPlaying(t)
 
 export const updateNowPlaying = (
+  logger: Logger,
   lastFm: LastFmApi,
   sessionToken: string,
   playingTrack: Observable<TrackWithContext>,
@@ -63,13 +65,12 @@ export const updateNowPlaying = (
       ).pipe(
         map((result): UpdateNowPlayingResult => ({ type: "success", result })),
         tap(() => {
-          console.log(
+          logger.info(
             `✓ Updated now playing for ${groupName ? `group "${groupName}"` : `logical unit ${logicalUnitId}`}: ${track.artist} - ${track.title}`,
           )
         }),
         catchError((e): Observable<UpdateNowPlayingResult> => {
           const errorMsg = `Unable to update now playing track for ${groupName ? `group "${groupName}"` : `logical unit ${logicalUnitId}`}`
-          console.error(`✗ ${errorMsg}:`, e.message)
           return of({
             type: "error",
             error: e,
@@ -82,6 +83,7 @@ export const updateNowPlaying = (
 }
 
 export const scrobbleTrack = (
+  logger: Logger,
   lastFm: LastFmApi,
   sessionToken: string,
   playingTrack: Observable<TrackWithContext>,
@@ -106,13 +108,12 @@ export const scrobbleTrack = (
       ).pipe(
         map((result): SubmitScrobbleResult => ({ type: "success", result })),
         tap(() => {
-          console.log(
+          logger.info(
             `♪ Scrobbled track for ${groupName ? `group "${groupName}"` : `logical unit ${logicalUnitId}`}: ${track.artist} - ${track.title} (${track.secs}s)`,
           )
         }),
         catchError((e): Observable<SubmitScrobbleResult> => {
           const errorMsg = `Unable to scrobble track for ${groupName ? `group "${groupName}"` : `logical unit ${logicalUnitId}`}`
-          console.error(`✗ ${errorMsg}:`, e.message)
           return of({
             type: "error",
             error: e,

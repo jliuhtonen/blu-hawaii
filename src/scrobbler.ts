@@ -200,12 +200,13 @@ export const createScrobbler = async ({
     )
 
   const updatedNowPlayingTrack = updateNowPlaying(
+    logger,
     lastFm,
     sessionToken,
     logicalUnitTracks,
   )
 
-  const scrobbledTrack = scrobbleTrack(lastFm, sessionToken, logicalUnitTracks)
+  const scrobbledTrack = scrobbleTrack(logger, lastFm, sessionToken, logicalUnitTracks)
 
   return {
     updatedNowPlayingTrack,
