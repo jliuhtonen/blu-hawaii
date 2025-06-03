@@ -10,6 +10,7 @@ import {
   of,
   map,
   tap,
+  groupBy,
 } from "rxjs"
 import {
   hasPlayedOverThreshold,
@@ -51,32 +52,36 @@ export const updateNowPlaying = (
 ): Observable<UpdateNowPlayingResult> => {
   return playingTrack.pipe(
     filter(({ track }) => shouldUpdateNowPlaying(track)),
-    distinctUntilChanged(
-      ({ track: a, logicalUnitId: unitA }, { track: b, logicalUnitId: unitB }) =>
-        unitA === unitB && isSameTrack(a, b)
-    ),
-    mergeMap(({ track, logicalUnitId, groupName }) =>
-      from(
-        lastFm.nowPlaying(sessionToken, {
-          artist: track.artist,
-          album: track.album,
-          track: track.title,
-        }),
-      ).pipe(
-        map((result): UpdateNowPlayingResult => ({ type: "success", result })),
-        tap(() => {
-          logger.info(
-            `✓ Updated now playing for ${groupName ? `group "${groupName}"` : `logical unit ${logicalUnitId}`}: ${track.artist} - ${track.title}`,
-          )
-        }),
-        catchError((e): Observable<UpdateNowPlayingResult> => {
-          const errorMsg = `Unable to update now playing track for ${groupName ? `group "${groupName}"` : `logical unit ${logicalUnitId}`}`
-          return of({
-            type: "error",
-            error: e,
-            message: errorMsg,
-          })
-        }),
+    groupBy(({ logicalUnitId }) => logicalUnitId),
+    mergeMap((logicalUnitStream) =>
+      logicalUnitStream.pipe(
+        distinctUntilChanged(({ track: a }, { track: b }) => isSameTrack(a, b)),
+        mergeMap(({ track, logicalUnitId, groupName }) =>
+          from(
+            lastFm.nowPlaying(sessionToken, {
+              artist: track.artist,
+              album: track.album,
+              track: track.title,
+            }),
+          ).pipe(
+            map(
+              (result): UpdateNowPlayingResult => ({ type: "success", result }),
+            ),
+            tap(() => {
+              logger.info(
+                `✓ Updated now playing for ${groupName ? `group "${groupName}"` : `logical unit ${logicalUnitId}`}: ${track.artist} - ${track.title}`,
+              )
+            }),
+            catchError((e): Observable<UpdateNowPlayingResult> => {
+              const errorMsg = `Unable to update now playing track for ${groupName ? `group "${groupName}"` : `logical unit ${logicalUnitId}`}`
+              return of({
+                type: "error",
+                error: e,
+                message: errorMsg,
+              })
+            }),
+          ),
+        ),
       ),
     ),
   )
@@ -90,36 +95,40 @@ export const scrobbleTrack = (
 ): Observable<SubmitScrobbleResult> => {
   return playingTrack.pipe(
     filter(({ track }) => shouldScrobble(track)),
-    distinctUntilChanged(
-      ({ track: a, logicalUnitId: unitA }, { track: b, logicalUnitId: unitB }) =>
-        unitA === unitB && isSameTrack(a, b)
-    ),
-    mergeMap(({ track, logicalUnitId, groupName }) =>
-      defer(() =>
-        from(
-          lastFm.scrobbleTrack(sessionToken, {
-            artist: track.artist,
-            album: track.album,
-            track: track.title,
-            ...(!!track.totalLength && { duration: track.totalLength }),
-            timestamp: Math.floor(Date.now() / 1000),
-          }),
-        ).pipe(retry({ delay: 20000, count: 5 })),
-      ).pipe(
-        map((result): SubmitScrobbleResult => ({ type: "success", result })),
-        tap(() => {
-          logger.info(
-            `♪ Scrobbled track for ${groupName ? `group "${groupName}"` : `logical unit ${logicalUnitId}`}: ${track.artist} - ${track.title} (${track.secs}s)`,
-          )
-        }),
-        catchError((e): Observable<SubmitScrobbleResult> => {
-          const errorMsg = `Unable to scrobble track for ${groupName ? `group "${groupName}"` : `logical unit ${logicalUnitId}`}`
-          return of({
-            type: "error",
-            error: e,
-            message: errorMsg,
-          })
-        }),
+    groupBy(({ logicalUnitId }) => logicalUnitId),
+    mergeMap((logicalUnitStream) =>
+      logicalUnitStream.pipe(
+        distinctUntilChanged(({ track: a }, { track: b }) => isSameTrack(a, b)),
+        mergeMap(({ track, logicalUnitId, groupName }) =>
+          defer(() =>
+            from(
+              lastFm.scrobbleTrack(sessionToken, {
+                artist: track.artist,
+                album: track.album,
+                track: track.title,
+                ...(!!track.totalLength && { duration: track.totalLength }),
+                timestamp: Math.floor(Date.now() / 1000),
+              }),
+            ).pipe(retry({ delay: 20000, count: 5 })),
+          ).pipe(
+            map(
+              (result): SubmitScrobbleResult => ({ type: "success", result }),
+            ),
+            tap(() => {
+              logger.info(
+                `♪ Scrobbled track for ${groupName ? `group "${groupName}"` : `logical unit ${logicalUnitId}`}: ${track.artist} - ${track.title} (${track.secs}s)`,
+              )
+            }),
+            catchError((e): Observable<SubmitScrobbleResult> => {
+              const errorMsg = `Unable to scrobble track for ${groupName ? `group "${groupName}"` : `logical unit ${logicalUnitId}`}`
+              return of({
+                type: "error",
+                error: e,
+                message: errorMsg,
+              })
+            }),
+          ),
+        ),
       ),
     ),
   )
