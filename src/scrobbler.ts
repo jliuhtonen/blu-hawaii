@@ -51,7 +51,10 @@ const createLogicalUnitId = (
 class SimpleStateManager {
   private states = new Map<string, LogicalUnitState>()
 
-  updateState(player: Player, playingTrack: PlayingTrack): LogicalUnitState | null {
+  updateState(
+    player: Player,
+    playingTrack: PlayingTrack,
+  ): LogicalUnitState | null {
     if (!isTrackPlaying(playingTrack)) {
       return null
     }
@@ -59,7 +62,10 @@ class SimpleStateManager {
     const logicalUnitId = createLogicalUnitId(player, playingTrack)
     const existingState = this.states.get(logicalUnitId)
 
-    if (!existingState || !isSameTrack(existingState.currentTrack, playingTrack)) {
+    if (
+      !existingState ||
+      !isSameTrack(existingState.currentTrack, playingTrack)
+    ) {
       const newState: LogicalUnitState = {
         logicalUnitId,
         currentTrack: playingTrack,
@@ -69,12 +75,13 @@ class SimpleStateManager {
       return newState
     }
 
-    this.states.set(logicalUnitId, {
+    const updatedState: LogicalUnitState = {
       ...existingState,
       currentTrack: playingTrack,
-    })
+    }
+    this.states.set(logicalUnitId, updatedState)
 
-    return existingState
+    return updatedState
   }
 }
 
@@ -90,31 +97,47 @@ export const createScrobbler = async ({
 
   const stateManager = new SimpleStateManager()
 
-  const logicalUnitTracks: Observable<TrackWithContext> = playersObservable.pipe(
-    mergeMap((players: Player[]) =>
-      merge(
-        ...players.map((player) =>
-          createPlayersStatusObservable(
-            logger.child({ component: "bluOS", playerId: createPlayerId(player) }),
-            of([player])
-          ).pipe(
-            filter(({ playingTrack }) => !!playingTrack),
-            map(({ playingTrack }) => stateManager.updateState(player, playingTrack!)),
-            filter((state): state is LogicalUnitState => state !== null),
-            map((state) => ({
-              track: state.currentTrack,
-              logicalUnitId: state.logicalUnitId,
-              ...(state.groupName && { groupName: state.groupName }),
-            }))
-          )
-        )
-      )
-    ),
-    share()
-  )
+  const logicalUnitTracks: Observable<TrackWithContext> =
+    playersObservable.pipe(
+      mergeMap((players: Player[]) =>
+        merge(
+          ...players.map((player) =>
+            createPlayersStatusObservable(
+              logger.child({
+                component: "bluOS",
+                playerId: createPlayerId(player),
+              }),
+              of([player]),
+            ).pipe(
+              filter(({ playingTrack }) => !!playingTrack),
+              map(({ playingTrack }) =>
+                stateManager.updateState(player, playingTrack!),
+              ),
+              filter((state): state is LogicalUnitState => state !== null),
+              map((state) => ({
+                track: state.currentTrack,
+                logicalUnitId: state.logicalUnitId,
+                ...(state.groupName && { groupName: state.groupName }),
+              })),
+            ),
+          ),
+        ),
+      ),
+      share(),
+    )
 
   return {
-    updatedNowPlayingTrack: updateNowPlaying(logger, lastFm, sessionToken, logicalUnitTracks),
-    scrobbledTrack: scrobbleTrack(logger, lastFm, sessionToken, logicalUnitTracks),
+    updatedNowPlayingTrack: updateNowPlaying(
+      logger,
+      lastFm,
+      sessionToken,
+      logicalUnitTracks,
+    ),
+    scrobbledTrack: scrobbleTrack(
+      logger,
+      lastFm,
+      sessionToken,
+      logicalUnitTracks,
+    ),
   }
 }
