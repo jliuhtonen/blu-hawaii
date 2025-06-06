@@ -44,6 +44,7 @@ const xmlJsStatus = zod
       secs: xmlTextField,
       totlen: xmlTextField.optional(),
       state: xmlTextField,
+      groupName: xmlTextField.optional(),
     }),
   })
   .transform((value) => ({
@@ -56,6 +57,7 @@ const xmlJsStatus = zod
     secs: Number(value.status.secs._text),
     totalLength: value.status.totlen && Number(value.status.totlen._text),
     state: value.status.state._text,
+    groupName: value.status.groupName?._text,
   }))
 
 export interface BluOsConfig {
@@ -78,6 +80,7 @@ export type PlayingTrack = {
   secs: number
   totalLength: number | undefined
   state: string
+  groupName?: string
 }
 
 const longPollTimeoutSecs = 100
@@ -137,7 +140,8 @@ const parseBluOsStatus = (bluOsXml: string): StatusQueryResponse => {
   const parsedData = xmlJsStatus.safeParse(parsedJs)
 
   if (parsedData.success) {
-    const { artist, album, secs, totalLength, state } = parsedData.data
+    const { artist, album, secs, totalLength, state, groupName } =
+      parsedData.data
     const title = resolveTrackName(parsedData.data)
     return {
       etag,
@@ -148,6 +152,7 @@ const parseBluOsStatus = (bluOsXml: string): StatusQueryResponse => {
         secs,
         totalLength,
         state,
+        ...(groupName !== undefined && { groupName }),
       },
     }
   } else {
