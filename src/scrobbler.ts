@@ -1,4 +1,4 @@
-import { Observable, filter, map, of, mergeMap, share, merge } from "rxjs"
+import { Observable, filter, map, of, mergeMap, share, merge, scan } from "rxjs"
 import { Logger } from "pino"
 import {
   createPlayersStatusObservable,
@@ -48,43 +48,6 @@ const createLogicalUnitId = (
   return `player:${player.ip}:${player.port}`
 }
 
-class SimpleStateManager {
-  private states = new Map<string, LogicalUnitState>()
-
-  updateState(
-    player: Player,
-    playingTrack: PlayingTrack,
-  ): LogicalUnitState | null {
-    if (!isTrackPlaying(playingTrack)) {
-      return null
-    }
-
-    const logicalUnitId = createLogicalUnitId(player, playingTrack)
-    const existingState = this.states.get(logicalUnitId)
-
-    if (
-      !existingState ||
-      !isSameTrack(existingState.currentTrack, playingTrack)
-    ) {
-      const newState: LogicalUnitState = {
-        logicalUnitId,
-        currentTrack: playingTrack,
-        ...(playingTrack.groupName && { groupName: playingTrack.groupName }),
-      }
-      this.states.set(logicalUnitId, newState)
-      return newState
-    }
-
-    const updatedState: LogicalUnitState = {
-      ...existingState,
-      currentTrack: playingTrack,
-    }
-    this.states.set(logicalUnitId, updatedState)
-
-    return updatedState
-  }
-}
-
 export const createScrobbler = async ({
   config,
   logger,
@@ -94,8 +57,6 @@ export const createScrobbler = async ({
   const playersObservable = config.bluOs
     ? of([{ ...config.bluOs }])
     : discoverPlayersObservable()
-
-  const stateManager = new SimpleStateManager()
 
   const logicalUnitTracks: Observable<TrackWithContext> =
     playersObservable.pipe(
@@ -110,8 +71,44 @@ export const createScrobbler = async ({
               of([player]),
             ).pipe(
               filter(({ playingTrack }) => !!playingTrack),
-              map(({ playingTrack }) =>
-                stateManager.updateState(player, playingTrack!),
+              map(({ playingTrack }) => ({
+                player,
+                playingTrack: playingTrack!,
+              })),
+              scan(
+                (
+                  previousState: LogicalUnitState | null,
+                  { player, playingTrack },
+                ) => {
+                  if (!isTrackPlaying(playingTrack)) {
+                    return null
+                  }
+
+                  const logicalUnitId = createLogicalUnitId(
+                    player,
+                    playingTrack,
+                  )
+
+                  if (
+                    !previousState ||
+                    previousState.logicalUnitId !== logicalUnitId ||
+                    !isSameTrack(previousState.currentTrack, playingTrack)
+                  ) {
+                    return {
+                      logicalUnitId,
+                      currentTrack: playingTrack,
+                      ...(playingTrack.groupName && {
+                        groupName: playingTrack.groupName,
+                      }),
+                    }
+                  }
+
+                  return {
+                    ...previousState,
+                    currentTrack: playingTrack,
+                  }
+                },
+                null,
               ),
               filter((state): state is LogicalUnitState => state !== null),
               map((state) => ({
