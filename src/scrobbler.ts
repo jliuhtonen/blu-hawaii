@@ -48,6 +48,37 @@ const createLogicalUnitId = (
   return `player:${player.ip}:${player.port}`
 }
 
+const createLogicalUnitState = (
+  logicalUnitId: string,
+  playingTrack: PlayingTrack,
+): LogicalUnitState => ({
+  logicalUnitId,
+  currentTrack: playingTrack,
+  ...(playingTrack.groupName && { groupName: playingTrack.groupName }),
+})
+
+const shouldEmitNewState = (
+  previousState: LogicalUnitState | null,
+  logicalUnitId: string,
+  playingTrack: PlayingTrack,
+): boolean =>
+  !previousState ||
+  previousState.logicalUnitId !== logicalUnitId ||
+  !isSameTrack(previousState.currentTrack, playingTrack)
+
+const updatePlayerState = (
+  previousState: LogicalUnitState | null,
+  { player, playingTrack }: { player: Player; playingTrack: PlayingTrack },
+): LogicalUnitState | null => {
+  if (!isTrackPlaying(playingTrack)) return null
+
+  const logicalUnitId = createLogicalUnitId(player, playingTrack)
+
+  return shouldEmitNewState(previousState, logicalUnitId, playingTrack)
+    ? createLogicalUnitState(logicalUnitId, playingTrack)
+    : { ...previousState!, currentTrack: playingTrack }
+}
+
 export const createScrobbler = async ({
   config,
   logger,
@@ -75,41 +106,7 @@ export const createScrobbler = async ({
                 player,
                 playingTrack: playingTrack!,
               })),
-              scan(
-                (
-                  previousState: LogicalUnitState | null,
-                  { player, playingTrack },
-                ) => {
-                  if (!isTrackPlaying(playingTrack)) {
-                    return null
-                  }
-
-                  const logicalUnitId = createLogicalUnitId(
-                    player,
-                    playingTrack,
-                  )
-
-                  if (
-                    !previousState ||
-                    previousState.logicalUnitId !== logicalUnitId ||
-                    !isSameTrack(previousState.currentTrack, playingTrack)
-                  ) {
-                    return {
-                      logicalUnitId,
-                      currentTrack: playingTrack,
-                      ...(playingTrack.groupName && {
-                        groupName: playingTrack.groupName,
-                      }),
-                    }
-                  }
-
-                  return {
-                    ...previousState,
-                    currentTrack: playingTrack,
-                  }
-                },
-                null,
-              ),
+              scan(updatePlayerState, null),
               filter((state): state is LogicalUnitState => state !== null),
               map((state) => ({
                 track: state.currentTrack,
