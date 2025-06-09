@@ -48,7 +48,7 @@ const shouldUpdateNowPlaying = (t: PlayingTrack) => isTrackPlaying(t)
 const createSubmitStream = <T>(
   playingTrack: Observable<TrackWithContext>,
   shouldSubmit: (track: PlayingTrack) => boolean,
-  submitFn: (trackWithContext: TrackWithContext) => Observable<T>
+  submitFn: (trackWithContext: TrackWithContext) => Observable<T>,
 ): Observable<T> => {
   return playingTrack.pipe(
     filter(({ track }) => shouldSubmit(track)),
@@ -56,9 +56,9 @@ const createSubmitStream = <T>(
     mergeMap((logicalUnitStream) =>
       logicalUnitStream.pipe(
         distinctUntilChanged(({ track: a }, { track: b }) => isSameTrack(a, b)),
-        mergeMap(submitFn)
-      )
-    )
+        mergeMap(submitFn),
+      ),
+    ),
   )
 }
 
@@ -77,12 +77,12 @@ export const updateNowPlaying = (
           artist: track.artist,
           album: track.album,
           track: track.title,
-        })
+        }),
       ).pipe(
         map((result): UpdateNowPlayingResult => ({ type: "success", result })),
         tap(() => {
           logger.info(
-            `✓ Updated now playing for ${groupName ? `group "${groupName}"` : `logical unit ${logicalUnitId}`}: ${track.artist} - ${track.title}`
+            `✓ Updated now playing for ${groupName ? `group "${groupName}"` : `logical unit ${logicalUnitId}`}: ${track.artist} - ${track.title}`,
           )
         }),
         catchError((e): Observable<UpdateNowPlayingResult> => {
@@ -92,8 +92,8 @@ export const updateNowPlaying = (
             error: e,
             message: errorMsg,
           })
-        })
-      )
+        }),
+      ),
   )
 }
 
@@ -115,13 +115,13 @@ export const scrobbleTrack = (
             track: track.title,
             ...(!!track.totalLength && { duration: track.totalLength }),
             timestamp: Math.floor(Date.now() / 1000),
-          })
-        ).pipe(retry({ delay: 20000, count: 5 }))
+          }),
+        ).pipe(retry({ delay: 20000, count: 5 })),
       ).pipe(
         map((result): SubmitScrobbleResult => ({ type: "success", result })),
         tap(() => {
           logger.info(
-            `♪ Scrobbled track for ${groupName ? `group "${groupName}"` : `logical unit ${logicalUnitId}`}: ${track.artist} - ${track.title} (${track.secs}s)`
+            `♪ Scrobbled track for ${groupName ? `group "${groupName}"` : `logical unit ${logicalUnitId}`}: ${track.artist} - ${track.title} (${track.secs}s)`,
           )
         }),
         catchError((e): Observable<SubmitScrobbleResult> => {
@@ -131,7 +131,7 @@ export const scrobbleTrack = (
             error: e,
             message: errorMsg,
           })
-        })
-      )
+        }),
+      ),
   )
 }
