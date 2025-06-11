@@ -40,10 +40,11 @@ const xmlJsStatus = zod
       name: xmlTextField.optional(),
       title1: xmlTextField,
       title2: xmlTextField,
-      title3: xmlTextField,
+      title3: xmlTextField.optional(),
       secs: xmlTextField,
       totlen: xmlTextField.optional(),
       state: xmlTextField,
+      groupName: xmlTextField.optional(),
     }),
   })
   .transform((value) => ({
@@ -52,10 +53,11 @@ const xmlJsStatus = zod
     name: value.status.name?._text,
     title1: value.status.title1._text,
     title2: value.status.title2._text,
-    title3: value.status.title3._text,
+    title3: value.status.title3?._text,
     secs: Number(value.status.secs._text),
     totalLength: value.status.totlen && Number(value.status.totlen._text),
     state: value.status.state._text,
+    groupName: value.status.groupName?._text,
   }))
 
 export interface BluOsConfig {
@@ -78,6 +80,7 @@ export type PlayingTrack = {
   secs: number
   totalLength: number | undefined
   state: string
+  groupName?: string
 }
 
 const longPollTimeoutSecs = 100
@@ -128,7 +131,10 @@ const fetchBluOsStatus = (
  **/
 const resolveTrackName = (t: PlayingBluOsTrack): string =>
   t.name ??
-  (t.artist === t.title2 && t.album === t.title3 ? t.title1 : t.title2)
+  (t.artist === t.title2 &&
+  (t.album === t.title3 || (t.title3 == undefined && t.album === t.title1))
+    ? t.title1
+    : t.title2)
 
 const parseBluOsStatus = (bluOsXml: string): StatusQueryResponse => {
   const parsedJs = xml2js(bluOsXml, { compact: true })
@@ -137,7 +143,8 @@ const parseBluOsStatus = (bluOsXml: string): StatusQueryResponse => {
   const parsedData = xmlJsStatus.safeParse(parsedJs)
 
   if (parsedData.success) {
-    const { artist, album, secs, totalLength, state } = parsedData.data
+    const { artist, album, secs, totalLength, state, groupName } =
+      parsedData.data
     const title = resolveTrackName(parsedData.data)
     return {
       etag,
@@ -148,6 +155,7 @@ const parseBluOsStatus = (bluOsXml: string): StatusQueryResponse => {
         secs,
         totalLength,
         state,
+        ...(groupName !== undefined && { groupName }),
       },
     }
   } else {
