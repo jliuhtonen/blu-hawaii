@@ -131,7 +131,7 @@ const fetchBluOsStatus = (
  **/
 const resolveTrackName = (t: PlayingBluOsTrack): string =>
   t.name ??
-  (t.artist === t.title2 && (t.album === t.title3 || t.album === t.title1) ? t.title1 : t.title2)
+  (t.artist === t.title2 && (t.album === t.title3 || (t.title3 == undefined && t.album === t.title1)) ? t.title1 : t.title2)
 
 const parseBluOsStatus = (bluOsXml: string): StatusQueryResponse => {
   const parsedJs = xml2js(bluOsXml, { compact: true })
