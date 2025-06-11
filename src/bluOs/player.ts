@@ -40,7 +40,7 @@ const xmlJsStatus = zod
       name: xmlTextField.optional(),
       title1: xmlTextField,
       title2: xmlTextField,
-      title3: xmlTextField,
+      title3: xmlTextField.optional(),
       secs: xmlTextField,
       totlen: xmlTextField.optional(),
       state: xmlTextField,
@@ -53,7 +53,7 @@ const xmlJsStatus = zod
     name: value.status.name?._text,
     title1: value.status.title1._text,
     title2: value.status.title2._text,
-    title3: value.status.title3._text,
+    title3: value.status.title3?._text,
     secs: Number(value.status.secs._text),
     totalLength: value.status.totlen && Number(value.status.totlen._text),
     state: value.status.state._text,
@@ -131,7 +131,7 @@ const fetchBluOsStatus = (
  **/
 const resolveTrackName = (t: PlayingBluOsTrack): string =>
   t.name ??
-  (t.artist === t.title2 && t.album === t.title3 ? t.title1 : t.title2)
+  (t.artist === t.title2 && (t.album === t.title3 || t.album === t.title1) ? t.title1 : t.title2)
 
 const parseBluOsStatus = (bluOsXml: string): StatusQueryResponse => {
   const parsedJs = xml2js(bluOsXml, { compact: true })

@@ -10,6 +10,7 @@ import {
   trackPandoraRadioResponse,
   trackRadioResponse,
   trackStreamingResponse,
+  spotifySingleResponse,
 } from "./util/bluOsUtil.js"
 
 const createTestScrobbler = () => {
@@ -249,6 +250,64 @@ describe("Scrobbler", () => {
               },
               track: {
                 value: "Nectar",
+                corrected: false,
+              },
+              ignoredMessage: {
+                code: "0",
+                value: "",
+              },
+            },
+          },
+        },
+      },
+    ])
+  })
+
+  it("should properly parse Spotify single track", async () => {
+    nock("http://10.0.0.10:11000")
+      .get("/Status")
+      .query({
+        timeout: "100",
+      })
+      .reply(200, spotifySingleResponse)
+    nock("https://ws.audioscrobbler.com")
+      .post(
+        "/2.0",
+        "artist=Rafe+Pearlman&album=Te+Amo&track=Te+Amo&method=track.updateNowPlaying&api_key=api-key&sk=SESSIONTOKEN&api_sig=e796cd8e0122d56f47728d22968b0bbe&format=json",
+      )
+      .matchHeader("content-type", "application/x-www-form-urlencoded")
+      .matchHeader("accept", "application/json")
+      .reply(200, {
+        nowplaying: {
+          artist: { corrected: "0", "#text": "Rafe Pearlman" },
+          track: { corrected: "0", "#text": "Te Amo" },
+          ignoredMessage: { code: "0", "#text": "" },
+          albumArtist: { corrected: "0", "#text": "" },
+          album: { corrected: "0", "#text": "Te Amo" },
+        },
+      })
+    const { updatedNowPlayingTrack } = await createTestScrobbler()
+    await assertObservableResults(updatedNowPlayingTrack, [
+      {
+        type: "success",
+        result: {
+          type: "known",
+          value: {
+            nowplaying: {
+              artist: {
+                value: "Rafe Pearlman",
+                corrected: false,
+              },
+              album: {
+                value: "Te Amo",
+                corrected: false,
+              },
+              albumArtist: {
+                value: "",
+                corrected: false,
+              },
+              track: {
+                value: "Te Amo",
                 corrected: false,
               },
               ignoredMessage: {

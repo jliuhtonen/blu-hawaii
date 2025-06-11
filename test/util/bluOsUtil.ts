@@ -16,8 +16,7 @@ export const trackStreamingResponse = ({
   totalLength,
   state,
   etag,
-}: TrackData): string =>
-  `
+}: TrackData): string => `
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <status etag="${etag}">
 <actions>
@@ -109,7 +108,7 @@ export const trackRadioResponse: string = `
 <volume>0</volume>
 <secs>45</secs>
 </status>
-  `
+`.trim()
 
 export const trackPandoraRadioResponse: string = `
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -159,4 +158,49 @@ export const trackPandoraRadioResponse: string = `
 <volume>36</volume>
 <secs>183</secs>
 </status>
-`
+`.trim()
+
+export const spotifySingleResponse: string = `
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<status etag="a26f2f977fba34e8b292941c327e0a39">
+<actions>
+  <action androidAction="android.intent.action.VIEW" androidPackage="com.spotify.music" desktopApp="spotify:open" desktopInstall="https://spotify.com/download" icon="/Sources/images/SpotifyIcon.png" iosApp="spotify:open" itunesUrl="https://itunes.apple.com/ex/app/spotify/id324684580" name="contextMenuItem" text="Open Spotify app" />
+  <action name="back" />
+  <action name="skip" url="/Action?service=Spotify&amp;action=Next" />
+  <action displayName="Add preset" name="cmItem" type="preset" url="/Action?service=Spotify&amp;action=addPreset" />
+</actions>
+<album>Te Amo</album>
+<artist>Rafe Pearlman</artist>
+<canSeek>1</canSeek>
+<currentImage>https://i.scdn.co/image/ab67616d0000b27326a326b77e1b9e392287a362</currentImage>
+<cursor>22</cursor>
+<db>-16.9</db>
+<image>https://i.scdn.co/image/ab67616d0000b27326a326b77e1b9e392287a362</image>
+<indexing>0</indexing>
+<inputId>Spotify</inputId>
+<mid>23</mid>
+<mode>1</mode>
+<mute>0</mute>
+<noCoverBackground>true</noCoverBackground>
+<pid>17</pid>
+<prid>0</prid>
+<quality>320000</quality>
+<repeat>2</repeat>
+<service>Spotify</service>
+<serviceIcon>/Sources/images/SpotifyIcon.png</serviceIcon>
+<serviceName>Spotify</serviceName>
+<shuffle>0</shuffle>
+<sid>58</sid>
+<sleep></sleep>
+<song>0</song>
+<state>stream</state>
+<stationImage>/Sources/images/SpotifyIcon.png</stationImage>
+<streamUrl>Spotify:spotify_pcm01:pcm/44100/16/2/13</streamUrl>
+<syncStat>737</syncStat>
+<title1>Te Amo</title1>
+<title2>Rafe Pearlman</title2>
+<totlen>297.5</totlen>
+<volume>62</volume>
+<secs>9</secs>
+</status>
+`.trim()
