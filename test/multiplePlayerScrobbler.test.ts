@@ -38,16 +38,47 @@ const mockPlayerStatus = (
     .reply(200, responseXml)
 }
 
+const mockPlayerStatusWithEtag = (
+  player: Player,
+  etag: string,
+  trackData: {
+    artist: string
+    album: string
+    title: string
+    secs: number
+    totalLength: number
+    state: string
+    etag: string
+    groupName?: string
+  },
+) => {
+  const responseXml = trackData.groupName
+    ? trackStreamingResponse(trackData).replace(
+        "</status>",
+        `<groupName>${trackData.groupName}</groupName></status>`,
+      )
+    : trackStreamingResponse(trackData)
+
+  return nock(`http://${player.ip}:${player.port}`)
+    .get("/Status")
+    .query({
+      timeout: "100",
+      etag,
+    })
+    .reply(200, responseXml)
+}
+
 describe("Multiple Player Scrobbler", () => {
   before(() => {
     nock.disableNetConnect()
   })
 
-  it("should handle grouped players and individual player correctly", async () => {
+  it("should handle grouped players and individual player correctly with multiple status updates", async () => {
     const player1: Player = { ip: "192.168.1.100", port: 11000 }
     const player2: Player = { ip: "192.168.1.101", port: 11000 }
     const player3: Player = { ip: "192.168.1.102", port: 11000 }
 
+    // Initial status updates for all players
     mockPlayerStatus(player1, {
       artist: "Group Artist",
       album: "Group Album",
@@ -78,6 +109,39 @@ describe("Multiple Player Scrobbler", () => {
       totalLength: 500,
       state: "stream",
       etag: "etag3",
+    })
+
+    // Additional status updates with progress (same tracks, more time elapsed)
+    mockPlayerStatusWithEtag(player1, "etag1", {
+      artist: "Group Artist",
+      album: "Group Album",
+      title: "Group Track",
+      secs: 320,
+      totalLength: 500,
+      state: "stream",
+      etag: "etag1-2",
+      groupName: "Living Room",
+    })
+
+    mockPlayerStatusWithEtag(player2, "etag2", {
+      artist: "Group Artist",
+      album: "Group Album",
+      title: "Group Track",
+      secs: 320,
+      totalLength: 500,
+      state: "stream",
+      etag: "etag2-2",
+      groupName: "Living Room",
+    })
+
+    mockPlayerStatusWithEtag(player3, "etag3", {
+      artist: "Solo Artist",
+      album: "Solo Album",
+      title: "Solo Track",
+      secs: 350,
+      totalLength: 500,
+      state: "stream",
+      etag: "etag3-2",
     })
 
     nock("https://ws.audioscrobbler.com")
