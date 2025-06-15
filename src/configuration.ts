@@ -36,6 +36,14 @@ const configuration = z.object({
       port: z.string().transform(Number),
     })
     .optional(),
+  players: z
+    .array(
+      z.object({
+        ip: z.string(),
+        port: z.number(),
+      }),
+    )
+    .optional(), // For testing multiple players
   lastFm: z.object({
     apiKey: z.string(),
     apiSecret: z.string(),

@@ -85,9 +85,11 @@ export const createScrobbler = async ({
   lastFm,
   sessionToken,
 }: ScrobblerDeps): Promise<ScrobblerOutput> => {
-  const playersObservable = config.bluOs
-    ? of([{ ...config.bluOs }])
-    : discoverPlayersObservable()
+  const playersObservable = config.players
+    ? of(config.players)
+    : config.bluOs
+      ? of([{ ...config.bluOs }])
+      : discoverPlayersObservable()
 
   const logicalUnitTracks: Observable<TrackWithContext> =
     playersObservable.pipe(
