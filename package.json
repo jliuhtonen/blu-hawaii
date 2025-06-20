@@ -12,7 +12,7 @@
   "bin": {
     "blu-hawaii": "./dist/index.js"
   },
-  "version": "2.0.1",
+  "version": "2.1.0",
   "description": "Scrobble music played on BluOS players to Last.fm",
   "scripts": {
     "clean": "rm tsconfig.tsbuildinfo && rm -rf ./dist",
