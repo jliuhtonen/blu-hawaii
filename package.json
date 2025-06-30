@@ -38,7 +38,7 @@
   },
   "dependencies": {
     "@jliuhtonen/nightvision": "^0.2.4",
-    "dotenv": "^16.0.3",
+    "dotenv": "^17.0.0",
     "ky": "^1.2.4",
     "pino": "^9.1.0",
     "rxjs": "^7.5.2",
