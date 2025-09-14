@@ -1,4 +1,4 @@
-import { pino } from "pino"
+import pino from "pino"
 import { Configuration } from "./configuration.js"
 import { createLastFmApi } from "./lastFm.js"
 import { createScrobbler } from "./scrobbler.js"

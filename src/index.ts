@@ -4,7 +4,7 @@ import { createApp } from "./app.js"
 import { parseConfiguration } from "./configuration.js"
 import { login } from "./session.js"
 import { createLastFmApi } from "./lastFm.js"
-import { pino } from "pino"
+import pino from "pino"
 
 const config = parseConfiguration(process.env)
 
