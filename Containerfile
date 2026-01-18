@@ -1,4 +1,4 @@
-FROM node:22.12-bookworm-slim AS base
+FROM node:lts-trixie-slim AS base
 
 FROM base AS builder
 

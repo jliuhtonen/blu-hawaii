@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-import "dotenv/config"
 import { createApp } from "./app.js"
 import { parseConfiguration } from "./configuration.js"
 import { login } from "./session.js"
