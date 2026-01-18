@@ -20,7 +20,7 @@
     "format": "prettier src --write",
     "test": "node --import tsx --test ./test/*.test.ts",
     "build": "npm run format && npx tsc",
-    "start": "npm run build && node dist/index.js",
+    "start": "npm run build && node --env-file=.env dist/index.js",
     "release-npm": "npm publish --access public",
     "release-docker": "docker buildx create --use && docker buildx build --platform linux/amd64,linux/arm64 -t docker.io/jliuhtonen/blu-hawaii:latest -t docker.io/jliuhtonen/blu-hawaii:$npm_package_version -f Containerfile . --push",
     "release": "npm run release-npm && npm run release-docker"
@@ -38,7 +38,6 @@
   },
   "dependencies": {
     "@jliuhtonen/nightvision": "^0.2.4",
-    "dotenv": "^17.0.0",
     "ky": "^1.2.4",
     "pino": "^10.0.0",
     "rxjs": "^7.5.2",
