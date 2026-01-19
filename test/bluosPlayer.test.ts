@@ -25,7 +25,7 @@ const mockPlayersStatus = (players: Player[]) => {
       .query({
         timeout: "100",
       })
-      .delayBody(i * 100)
+      .delay(i * 100)
       .reply(
         200,
         trackStreamingResponse({
@@ -43,7 +43,7 @@ const mockPlayersStatus = (players: Player[]) => {
         timeout: "100",
         etag: `etag${i}`,
       })
-      .delayBody(i * 100)
+      .delay(i * 100)
       .reply(
         200,
         trackStreamingResponse({
