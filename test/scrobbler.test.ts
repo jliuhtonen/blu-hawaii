@@ -1,17 +1,17 @@
 import { after, afterEach, before, beforeEach, describe, it } from "node:test"
 import nock from "nock"
 import path from "node:path"
-import { createScrobbler } from "../src/scrobbler.js"
-import { Configuration } from "../src/configuration.js"
+import { createScrobbler } from "../src/scrobbler.ts"
+import type { Configuration } from "../src/configuration.ts"
 import { pino } from "pino"
-import { createLastFmApi } from "../src/lastFm.js"
-import { assertObservableResults } from "./util/rxUtil.js"
+import { createLastFmApi } from "../src/lastFm.ts"
+import { assertObservableResults } from "./util/rxUtil.ts"
 import {
   trackPandoraRadioResponse,
   trackRadioResponse,
   trackStreamingResponse,
   spotifySingleResponse,
-} from "./util/bluOsUtil.js"
+} from "./util/bluOsUtil.ts"
 
 const createTestScrobbler = () => {
   const config: Configuration = {

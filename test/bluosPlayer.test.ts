@@ -1,6 +1,6 @@
 import { before, describe, it, mock } from "node:test"
 import nock from "nock"
-import { Player } from "../src/bluOs/serviceDiscovery.ts"
+import type { Player } from "../src/bluOs/serviceDiscovery.ts"
 import { trackStreamingResponse } from "./util/bluOsUtil.ts"
 import { createPlayersStatusObservable } from "../src/bluOs/player.ts"
 import pino from "pino"

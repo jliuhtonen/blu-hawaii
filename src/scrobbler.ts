@@ -1,22 +1,21 @@
 import { Observable, filter, map, of, mergeMap, share, merge, scan } from "rxjs"
-import { Logger } from "pino"
+import type { Logger } from "pino"
+import type { PlayingTrack } from "./bluOs/player.ts"
 import {
   createPlayersStatusObservable,
-  PlayingTrack,
   isTrackPlaying,
   isSameTrack,
-} from "./bluOs/player.js"
-import {
+} from "./bluOs/player.ts"
+import type {
   SubmitScrobbleResult,
   UpdateNowPlayingResult,
-  scrobbleTrack,
-  updateNowPlaying,
   TrackWithContext,
-} from "./submitTrack.js"
-import { Configuration } from "./configuration.js"
-import { LastFmApi } from "./lastFm.js"
-import { discoverPlayersObservable } from "./bluOs/serviceDiscovery.js"
-import { Player } from "./bluOs/serviceDiscovery.js"
+} from "./submitTrack.ts"
+import { scrobbleTrack, updateNowPlaying } from "./submitTrack.ts"
+import type { Configuration } from "./configuration.ts"
+import type { LastFmApi } from "./lastFm.ts"
+import { discoverPlayersObservable } from "./bluOs/serviceDiscovery.ts"
+import type { Player } from "./bluOs/serviceDiscovery.ts"
 
 export interface ScrobblerDeps {
   config: Configuration

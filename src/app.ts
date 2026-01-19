@@ -1,8 +1,8 @@
 import pino from "pino"
-import { Configuration } from "./configuration.js"
-import { createLastFmApi } from "./lastFm.js"
-import { createScrobbler } from "./scrobbler.js"
-import { loadSessionToken } from "./session.js"
+import type { Configuration } from "./configuration.ts"
+import { createLastFmApi } from "./lastFm.ts"
+import { createScrobbler } from "./scrobbler.ts"
+import { loadSessionToken } from "./session.ts"
 
 export const createApp = async (config: Configuration) => {
   const logger = pino(

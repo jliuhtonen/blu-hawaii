@@ -14,9 +14,9 @@ import {
 } from "rxjs"
 import { xml2js } from "xml-js"
 import * as zod from "zod"
-import { Logger } from "pino"
-import { createEtagCache } from "./etagCache.js"
-import { Player } from "./serviceDiscovery.js"
+import type { Logger } from "pino"
+import { createEtagCache } from "./etagCache.ts"
+import type { Player } from "./serviceDiscovery.ts"
 
 const xmlTextField = zod.object({
   _text: zod.string(),

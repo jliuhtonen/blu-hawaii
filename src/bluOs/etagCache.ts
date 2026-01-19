@@ -1,5 +1,5 @@
 import { BehaviorSubject, map } from "rxjs"
-import { omit } from "../util.js"
+import { omit } from "../util.ts"
 
 export const createEtagCache = () => {
   const playerEtagsCache: BehaviorSubject<Partial<Record<string, string>>> =

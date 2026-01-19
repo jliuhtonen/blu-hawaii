@@ -2,14 +2,10 @@ import ky from "ky"
 import { URLSearchParams } from "url"
 import * as zod from "zod"
 import crypto from "node:crypto"
-import { Logger } from "pino"
+import type { Logger } from "pino"
 import { z } from "zod"
-import {
-  asUrlEncodedFormData,
-  knownValue,
-  MaybeUnknown,
-  unknownValue,
-} from "./util.js"
+import type { MaybeUnknown } from "./util.ts"
+import { asUrlEncodedFormData, knownValue, unknownValue } from "./util.ts"
 
 const baseUrl = "https://ws.audioscrobbler.com/2.0"
 

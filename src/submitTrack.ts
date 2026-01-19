@@ -12,15 +12,19 @@ import {
   tap,
   groupBy,
 } from "rxjs"
+import type { PlayingTrack } from "./bluOs/player.ts"
 import {
   hasPlayedOverThreshold,
   isSameTrack,
   isTrackPlaying,
-  PlayingTrack,
-} from "./bluOs/player.js"
-import { LastFmApi, NowPlayingResponse, ScrobblesResponse } from "./lastFm.js"
-import { MaybeUnknown } from "./util.js"
-import { Logger } from "pino"
+} from "./bluOs/player.ts"
+import type {
+  LastFmApi,
+  NowPlayingResponse,
+  ScrobblesResponse,
+} from "./lastFm.ts"
+import type { MaybeUnknown } from "./util.ts"
+import type { Logger } from "pino"
 
 const scrobbleThreshold = 0.5
 
