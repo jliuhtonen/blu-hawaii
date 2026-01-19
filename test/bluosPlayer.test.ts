@@ -1,6 +1,6 @@
 import { before, describe, it, mock } from "node:test"
 import nock from "nock"
-import { Player } from "../src/bluOs/serviceDiscovery.ts"
+import type { Player } from "../src/bluOs/serviceDiscovery.ts"
 import { trackStreamingResponse } from "./util/bluOsUtil.ts"
 import { createPlayersStatusObservable } from "../src/bluOs/player.ts"
 import pino from "pino"
@@ -25,7 +25,7 @@ const mockPlayersStatus = (players: Player[]) => {
       .query({
         timeout: "100",
       })
-      .delayBody(i * 100)
+      .delay(i * 100)
       .reply(
         200,
         trackStreamingResponse({
@@ -43,7 +43,7 @@ const mockPlayersStatus = (players: Player[]) => {
         timeout: "100",
         etag: `etag${i}`,
       })
-      .delayBody(i * 100)
+      .delay(i * 100)
       .reply(
         200,
         trackStreamingResponse({

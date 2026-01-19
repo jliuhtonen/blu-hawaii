@@ -1,10 +1,12 @@
 {
   "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
     "incremental": true,
-    "target": "es2020",
+    "target": "ESNext",
     "lib": ["esnext"],
     "module": "NodeNext",
-    "rootDir": "./src",
+    "rootDirs": ["./src", "./test"],
     "moduleResolution": "NodeNext",
     "outDir": "./dist",
     "forceConsistentCasingInFileNames": true,
@@ -28,6 +30,8 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "declaration": true,
+    "rewriteRelativeImportExtensions": true,
+    "verbatimModuleSyntax": true,
   },
   "include": ["src/**/*.ts"]
 }

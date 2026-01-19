@@ -7,15 +7,15 @@ import {
   scan,
   switchMap,
 } from "rxjs"
-import {
+import type {
   AnnounceMessage,
   DeleteMessage,
   Packet,
   ReceivedMessage,
   ReceivedPacket,
-  createConnection,
 } from "@jliuhtonen/nightvision"
-import { omit } from "../util.js"
+import { createConnection } from "@jliuhtonen/nightvision"
+import { omit } from "../util.ts"
 
 const playerClassId = "0001"
 const supportedMessageTypes: ReceivedMessage["type"][] = ["announce", "delete"]

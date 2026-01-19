@@ -1,9 +1,8 @@
-#!/usr/bin/env node
-import "dotenv/config"
-import { createApp } from "./app.js"
-import { parseConfiguration } from "./configuration.js"
-import { login } from "./session.js"
-import { createLastFmApi } from "./lastFm.js"
+#!/usr/bin/env -S node --env-file=.env
+import { createApp } from "./app.ts"
+import { parseConfiguration } from "./configuration.ts"
+import { login } from "./session.ts"
+import { createLastFmApi } from "./lastFm.ts"
 import pino from "pino"
 
 const config = parseConfiguration(process.env)

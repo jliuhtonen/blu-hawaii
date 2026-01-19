@@ -1,5 +1,5 @@
 import * as fs from "node:fs/promises"
-import { LastFmApi } from "./lastFm.js"
+import type { LastFmApi } from "./lastFm.ts"
 import * as readline from "node:readline"
 
 const rl = readline.createInterface(process.stdin, process.stdout)
