@@ -1,4 +1,4 @@
-import { before, describe, it, mock } from "node:test"
+import { after, before, describe, it, mock } from "node:test"
 import nock from "nock"
 import type { Player } from "../src/bluOs/serviceDiscovery.ts"
 import { trackStreamingResponse } from "./util/bluOsUtil.ts"
@@ -64,10 +64,18 @@ describe("BluOS player status", () => {
     nock.disableNetConnect()
   })
 
+  after(() => {
+    nock.cleanAll()
+    nock.enableNetConnect()
+  })
+
+  mock.timers.enable({ apis: ["setTimeout"] })
+
   it("should return status for multiple players properly", async () => {
     const numberOfPlayers = 20
     const players = generatePlayers(numberOfPlayers)
     mockPlayersStatus(players)
+
     const responseObservable = createPlayersStatusObservable(
       pino({
         transport: {
@@ -77,9 +85,12 @@ describe("BluOS player status", () => {
       }),
       of(players),
     )
+
     await assertNumberOfObservableResults(
       responseObservable,
       numberOfPlayers * 2,
+      // Node 25 CI can have more scheduling jitter; leave some headroom.
+      15000,
     )
   })
 })
