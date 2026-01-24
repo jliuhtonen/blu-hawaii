@@ -18,7 +18,7 @@
     "clean": "rm tsconfig.tsbuildinfo && rm -rf ./dist",
     "lint": "prettier src --check",
     "format": "prettier src --write",
-    "test": "node --test ./test/*.test.ts",
+    "test": "node --test --test-timeout=1200000 ./test/*.test.ts",
     "build": "npm run format && npx tsc",
     "start": "node --env-file=.env src/index.ts",
     "release-npm": "npm publish --access public",
