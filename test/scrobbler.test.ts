@@ -38,10 +38,9 @@ const createTestScrobbler = () => {
     },
   }
   const logger = pino({
-    transport: {
-      target: "pino-pretty",
-    },
-    level: config.log.level,
+    // Avoid pino-pretty in tests/CI: it can spawn worker threads and keep
+    // handles alive longer than expected on newer Node versions.
+    level: "fatal",
   })
   return createScrobbler({
     config,

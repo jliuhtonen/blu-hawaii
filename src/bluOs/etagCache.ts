@@ -19,9 +19,14 @@ export const createEtagCache = () => {
   const cachedPlayerEtag = (ip: string) =>
     playerEtagsCache.pipe(map((playerMap) => playerMap[ip]))
 
+  const complete = () => {
+    playerEtagsCache.complete()
+  }
+
   return {
     cachePlayerEtag,
     evictPlayerEtag,
     cachedPlayerEtag,
+    complete,
   }
 }

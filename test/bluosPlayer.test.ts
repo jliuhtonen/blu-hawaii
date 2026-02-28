@@ -1,4 +1,4 @@
-import { after, before, describe, it, mock } from "node:test"
+import { after, before, describe, it } from "node:test"
 import nock from "nock"
 import type { Player } from "../src/bluOs/serviceDiscovery.ts"
 import { trackStreamingResponse } from "./util/bluOsUtil.ts"
@@ -69,8 +69,6 @@ describe("BluOS player status", () => {
     nock.enableNetConnect()
   })
 
-  mock.timers.enable({ apis: ["setTimeout"] })
-
   it("should return status for multiple players properly", async () => {
     const numberOfPlayers = 20
     const players = generatePlayers(numberOfPlayers)
@@ -78,10 +76,9 @@ describe("BluOS player status", () => {
 
     const responseObservable = createPlayersStatusObservable(
       pino({
-        transport: {
-          target: "pino-pretty",
-        },
-        level: "debug",
+        // Avoid pino-pretty in tests/CI: it spawns a worker thread and can
+        // introduce flakiness and extra handles on newer Node versions.
+        level: "fatal",
       }),
       of(players),
     )

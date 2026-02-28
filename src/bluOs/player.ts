@@ -11,6 +11,7 @@ import {
   share,
   switchMap,
   tap,
+  timer,
 } from "rxjs"
 import { xml2js } from "xml-js"
 import * as zod from "zod"
@@ -183,7 +184,7 @@ const createBluOsStatusObservable = ({
             abortController.abort()
           }),
         )
-      }).pipe(retry({ delay: 10000 }))
+      }).pipe(retry({ delay: () => timer(10000) }))
     }),
     map((r) => parseBluOsStatus(r)),
     tap((status: StatusQueryResponse) => {
@@ -193,6 +194,9 @@ const createBluOsStatusObservable = ({
       } else {
         etagCache.evictPlayerEtag(ip)
       }
+    }),
+    finalize(() => {
+      etagCache.complete()
     }),
     share(),
   )
