@@ -194,6 +194,9 @@ const createBluOsStatusObservable = ({
         etagCache.evictPlayerEtag(ip)
       }
     }),
+    finalize(() => {
+      etagCache.complete()
+    }),
     share(),
   )
 
