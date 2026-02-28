@@ -35,6 +35,7 @@ export const assertObservableResults = <T>(
           subscription.unsubscribe()
           onComplete()
         } catch (error) {
+          subscription.unsubscribe()
           onError(error instanceof Error ? error : new Error(String(error)))
         }
       },
@@ -97,6 +98,7 @@ export const assertNumberOfObservableResults = <T>(
           subscription.unsubscribe()
           onComplete()
         } catch (error) {
+          subscription.unsubscribe()
           onError(error instanceof Error ? error : new Error(String(error)))
         }
       },
