@@ -13,52 +13,48 @@ import {
   tap,
   timer,
 } from "rxjs"
-import { xml2js } from "xml-js"
+import { XMLParser } from "fast-xml-parser"
 import * as zod from "zod"
 import type { Logger } from "pino"
 import { createEtagCache } from "./etagCache.ts"
 import type { Player } from "./serviceDiscovery.ts"
 
-const xmlTextField = zod.object({
-  _text: zod.string(),
-})
-
-const xmlJsEtag = zod
+const bluOsEtag = zod
   .object({
     status: zod.object({
-      _attributes: zod.object({
-        etag: zod.string(),
-      }),
+      "@_etag": zod.string(),
     }),
   })
-  .transform((s) => s.status._attributes.etag)
+  .transform((s) => s.status["@_etag"])
 
-const xmlJsStatus = zod
+const bluOsStatus = zod
   .object({
     status: zod.object({
-      artist: xmlTextField,
-      album: xmlTextField,
-      name: xmlTextField.optional(),
-      title1: xmlTextField,
-      title2: xmlTextField,
-      title3: xmlTextField.optional(),
-      secs: xmlTextField,
-      totlen: xmlTextField.optional(),
-      state: xmlTextField,
-      groupName: xmlTextField.optional(),
+      artist: zod.string(),
+      album: zod.string(),
+      name: zod.string().optional(),
+      title1: zod.string(),
+      title2: zod.string(),
+      title3: zod.string().optional(),
+      secs: zod.string(),
+      totlen: zod.string().optional(),
+      state: zod.string(),
+      groupName: zod.string().optional(),
     }),
   })
   .transform((value) => ({
-    artist: value.status.artist._text,
-    album: value.status.album._text,
-    name: value.status.name?._text,
-    title1: value.status.title1._text,
-    title2: value.status.title2._text,
-    title3: value.status.title3?._text,
-    secs: Number(value.status.secs._text),
-    totalLength: value.status.totlen && Number(value.status.totlen._text),
-    state: value.status.state._text,
-    groupName: value.status.groupName?._text,
+    artist: value.status.artist,
+    album: value.status.album,
+    name: value.status.name,
+    title1: value.status.title1,
+    title2: value.status.title2,
+    title3: value.status.title3,
+    secs: Number(value.status.secs),
+    totalLength: value.status.totlen
+      ? Number(value.status.totlen)
+      : undefined,
+    state: value.status.state,
+    groupName: value.status.groupName,
   }))
 
 export interface BluOsConfig {
@@ -72,7 +68,7 @@ export interface StatusQueryResponse {
   playingTrack?: PlayingTrack
 }
 
-export type PlayingBluOsTrack = zod.infer<typeof xmlJsStatus>
+export type PlayingBluOsTrack = zod.infer<typeof bluOsStatus>
 
 export type PlayingTrack = {
   artist: string
@@ -137,11 +133,16 @@ const resolveTrackName = (t: PlayingBluOsTrack): string =>
     ? t.title1
     : t.title2)
 
-const parseBluOsStatus = (bluOsXml: string): StatusQueryResponse => {
-  const parsedJs = xml2js(bluOsXml, { compact: true })
+const xmlParser = new XMLParser({
+  ignoreAttributes: false,
+  parseTagValue: false,
+})
 
-  const etag = xmlJsEtag.parse(parsedJs)
-  const parsedData = xmlJsStatus.safeParse(parsedJs)
+const parseBluOsStatus = (bluOsXml: string): StatusQueryResponse => {
+  const parsedJs = xmlParser.parse(bluOsXml)
+
+  const etag = bluOsEtag.parse(parsedJs)
+  const parsedData = bluOsStatus.safeParse(parsedJs)
 
   if (parsedData.success) {
     const { artist, album, secs, totalLength, state, groupName } =

@@ -36,10 +36,10 @@
   },
   "dependencies": {
     "@jliuhtonen/nightvision": "^0.2.4",
+    "fast-xml-parser": "^5.8.0",
     "ky": "^2.0.0",
     "pino": "^10.2.1",
     "rxjs": "^7.8.2",
-    "xml-js": "^1.6.11",
     "zod": "^4.3.5"
   }
 }

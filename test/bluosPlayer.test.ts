@@ -5,7 +5,10 @@ import { trackStreamingResponse } from "./util/bluOsUtil.ts"
 import { createPlayersStatusObservable } from "../src/bluOs/player.ts"
 import pino from "pino"
 import { of } from "rxjs"
-import { assertNumberOfObservableResults } from "./util/rxUtil.ts"
+import {
+  assertNumberOfObservableResults,
+  assertObservableResults,
+} from "./util/rxUtil.ts"
 
 const generatePlayers = (count: number): Player[] => {
   const players: Player[] = []
@@ -89,5 +92,44 @@ describe("BluOS player status", () => {
       // Node 25 CI can have more scheduling jitter; leave some headroom.
       15000,
     )
+  })
+
+  it("should keep numeric-only metadata as strings", async () => {
+    const player: Player = { ip: "192.168.1.50", port: 11000 }
+    const numericTrack = {
+      artist: "311",
+      album: "21",
+      title: "1989",
+      secs: 5,
+      totalLength: 100,
+      state: "stream",
+      etag: "numEtag",
+    }
+    nock(`http://${player.ip}:${player.port}`)
+      .get("/Status")
+      .query({ timeout: "100" })
+      .reply(200, trackStreamingResponse(numericTrack))
+      .get("/Status")
+      .query({ timeout: "100", etag: "numEtag" })
+      .reply(200, trackStreamingResponse(numericTrack))
+
+    const responseObservable = createPlayersStatusObservable(
+      pino({ level: "fatal" }),
+      of([player]),
+    )
+
+    await assertObservableResults(responseObservable, [
+      {
+        etag: "numEtag",
+        playingTrack: {
+          artist: "311",
+          album: "21",
+          title: "1989",
+          secs: 5,
+          totalLength: 100,
+          state: "stream",
+        },
+      },
+    ])
   })
 })
