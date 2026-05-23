@@ -50,9 +50,7 @@ const bluOsStatus = zod
     title2: value.status.title2,
     title3: value.status.title3,
     secs: Number(value.status.secs),
-    totalLength: value.status.totlen
-      ? Number(value.status.totlen)
-      : undefined,
+    totalLength: value.status.totlen ? Number(value.status.totlen) : undefined,
     state: value.status.state,
     groupName: value.status.groupName,
   }))
