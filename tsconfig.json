@@ -6,6 +6,7 @@
     "target": "ESNext",
     "lib": ["esnext"],
     "module": "NodeNext",
+    "rootDir": "./src",
     "rootDirs": ["./src", "./test"],
     "moduleResolution": "NodeNext",
     "outDir": "./dist",
