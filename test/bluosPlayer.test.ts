@@ -132,4 +132,43 @@ describe("BluOS player status", () => {
       },
     ])
   })
+
+  it("should decode numeric character references in metadata", async () => {
+    const player: Player = { ip: "192.168.1.51", port: 11000 }
+    const escapedTrack = {
+      artist: "Guns N&#39; Roses",
+      album: "Punk Goes 80&#x27;s",
+      title: "Cities In Dust (7&#34; Version) &amp; More",
+      secs: 5,
+      totalLength: 100,
+      state: "stream",
+      etag: "entityEtag",
+    }
+    nock(`http://${player.ip}:${player.port}`)
+      .get("/Status")
+      .query({ timeout: "100" })
+      .reply(200, trackStreamingResponse(escapedTrack))
+      .get("/Status")
+      .query({ timeout: "100", etag: "entityEtag" })
+      .reply(200, trackStreamingResponse(escapedTrack))
+
+    const responseObservable = createPlayersStatusObservable(
+      pino({ level: "fatal" }),
+      of([player]),
+    )
+
+    await assertObservableResults(responseObservable, [
+      {
+        etag: "entityEtag",
+        playingTrack: {
+          artist: "Guns N' Roses",
+          album: "Punk Goes 80's",
+          title: 'Cities In Dust (7" Version) & More',
+          secs: 5,
+          totalLength: 100,
+          state: "stream",
+        },
+      },
+    ])
+  })
 })

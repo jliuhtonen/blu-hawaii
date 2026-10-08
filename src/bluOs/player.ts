@@ -134,6 +134,9 @@ const resolveTrackName = (t: PlayingBluOsTrack): string =>
 const xmlParser = new XMLParser({
   ignoreAttributes: false,
   parseTagValue: false,
+  // fast-xml-parser only decodes numeric character references (&#39;, &#x27;,
+  // &#34;) with this option; xml-js did it by default.
+  htmlEntities: true,
 })
 
 const parseBluOsStatus = (bluOsXml: string): StatusQueryResponse => {
