@@ -132,4 +132,86 @@ describe("BluOS player status", () => {
       },
     ])
   })
+
+  it("should decode numeric character references in metadata", async () => {
+    const player: Player = { ip: "192.168.1.51", port: 11000 }
+    const escapedTrack = {
+      artist: "Guns N&#39; Roses",
+      album: "Punk Goes 80&#x27;s",
+      title: "Cities In Dust (7&#34; Version) &amp; More",
+      secs: 5,
+      totalLength: 100,
+      state: "stream",
+      etag: "entityEtag",
+    }
+    nock(`http://${player.ip}:${player.port}`)
+      .get("/Status")
+      .query({ timeout: "100" })
+      .reply(200, trackStreamingResponse(escapedTrack))
+      .get("/Status")
+      .query({ timeout: "100", etag: "entityEtag" })
+      .reply(200, trackStreamingResponse(escapedTrack))
+
+    const responseObservable = createPlayersStatusObservable(
+      pino({ level: "fatal" }),
+      of([player]),
+    )
+
+    await assertObservableResults(responseObservable, [
+      {
+        etag: "entityEtag",
+        playingTrack: {
+          artist: "Guns N' Roses",
+          album: "Punk Goes 80's",
+          title: 'Cities In Dust (7" Version) & More',
+          secs: 5,
+          totalLength: 100,
+          state: "stream",
+        },
+      },
+    ])
+  })
+
+  it("should not expand DOCTYPE-declared entities", async () => {
+    const player: Player = { ip: "192.168.1.52", port: 11000 }
+    const track = {
+      artist: "Artist",
+      album: "Album",
+      title: "&boom;",
+      secs: 5,
+      totalLength: 100,
+      state: "stream",
+      etag: "doctypeEtag",
+    }
+    const response = trackStreamingResponse(track).replace(
+      "<status ",
+      '<!DOCTYPE status [<!ENTITY boom "BOOM">]>\n<status ',
+    )
+    nock(`http://${player.ip}:${player.port}`)
+      .get("/Status")
+      .query({ timeout: "100" })
+      .reply(200, response)
+      .get("/Status")
+      .query({ timeout: "100", etag: "doctypeEtag" })
+      .reply(200, response)
+
+    const responseObservable = createPlayersStatusObservable(
+      pino({ level: "fatal" }),
+      of([player]),
+    )
+
+    await assertObservableResults(responseObservable, [
+      {
+        etag: "doctypeEtag",
+        playingTrack: {
+          artist: "Artist",
+          album: "Album",
+          title: "&boom;",
+          secs: 5,
+          totalLength: 100,
+          state: "stream",
+        },
+      },
+    ])
+  })
 })
