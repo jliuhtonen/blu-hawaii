@@ -14,6 +14,7 @@ import {
   timer,
 } from "rxjs"
 import { XMLParser } from "fast-xml-parser"
+import { ENTITY_ACTION, EntityDecoder } from "@nodable/entities"
 import * as zod from "zod"
 import type { Logger } from "pino"
 import { createEtagCache } from "./etagCache.ts"
@@ -134,9 +135,12 @@ const resolveTrackName = (t: PlayingBluOsTrack): string =>
 const xmlParser = new XMLParser({
   ignoreAttributes: false,
   parseTagValue: false,
-  // fast-xml-parser only decodes numeric character references (&#39;, &#x27;,
-  // &#34;) with this option; xml-js did it by default.
-  htmlEntities: true,
+  // fast-xml-parser's default decoder leaves numeric character references
+  // (&#39;, &#x27;, &#34;) undecoded. A custom decoder bypasses the parser's
+  // expansion limits, so DOCTYPE-declared entities are blocked outright.
+  entityDecoder: new EntityDecoder({
+    onInputEntity: () => ENTITY_ACTION.BLOCK,
+  }),
 })
 
 const parseBluOsStatus = (bluOsXml: string): StatusQueryResponse => {

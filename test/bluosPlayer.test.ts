@@ -171,4 +171,47 @@ describe("BluOS player status", () => {
       },
     ])
   })
+
+  it("should not expand DOCTYPE-declared entities", async () => {
+    const player: Player = { ip: "192.168.1.52", port: 11000 }
+    const track = {
+      artist: "Artist",
+      album: "Album",
+      title: "&boom;",
+      secs: 5,
+      totalLength: 100,
+      state: "stream",
+      etag: "doctypeEtag",
+    }
+    const response = trackStreamingResponse(track).replace(
+      "<status ",
+      '<!DOCTYPE status [<!ENTITY boom "BOOM">]>\n<status ',
+    )
+    nock(`http://${player.ip}:${player.port}`)
+      .get("/Status")
+      .query({ timeout: "100" })
+      .reply(200, response)
+      .get("/Status")
+      .query({ timeout: "100", etag: "doctypeEtag" })
+      .reply(200, response)
+
+    const responseObservable = createPlayersStatusObservable(
+      pino({ level: "fatal" }),
+      of([player]),
+    )
+
+    await assertObservableResults(responseObservable, [
+      {
+        etag: "doctypeEtag",
+        playingTrack: {
+          artist: "Artist",
+          album: "Album",
+          title: "&boom;",
+          secs: 5,
+          totalLength: 100,
+          state: "stream",
+        },
+      },
+    ])
+  })
 })
