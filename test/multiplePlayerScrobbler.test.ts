@@ -147,9 +147,8 @@ describe("Multiple Player Scrobbler", () => {
     nock("https://ws.audioscrobbler.com")
       .persist()
       .post("/2.0")
-      .reply((_, requestBody) => {
-        const bodyStr =
-          typeof requestBody === "string" ? requestBody : String(requestBody)
+      .reply(async (request) => {
+        const bodyStr = await request.text()
 
         if (bodyStr.includes("method=track.updateNowPlaying")) {
           if (bodyStr.includes("Group+Artist")) {
