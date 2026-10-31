@@ -1,4 +1,4 @@
-FROM node:lts-trixie-slim AS base
+FROM node:26.13-trixie-slim AS base
 
 FROM base AS builder
 
