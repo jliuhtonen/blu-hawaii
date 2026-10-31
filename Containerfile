@@ -16,8 +16,8 @@ RUN npx tsc --incremental false
 
 FROM base AS runner
 
-ENV LOG_DEST /var/log/blu-hawaii/blu-hawaii.log
-ENV SESSION_FILE_PATH /home/blu-hawaii/.blu-hawaii-session
+ENV LOG_DEST=/var/log/blu-hawaii/blu-hawaii.log
+ENV SESSION_FILE_PATH=/home/blu-hawaii/.blu-hawaii-session
 
 RUN useradd -r -s /usr/sbin/nologin -M blu-hawaii
 
