@@ -1,4 +1,5 @@
 #!/usr/bin/env -S node --env-file=.env
+import "zod/compile"
 import { createApp } from "./app.ts"
 import { parseConfiguration } from "./configuration.ts"
 import { login } from "./session.ts"
